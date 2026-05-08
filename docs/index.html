@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Projeto Icaro - Demo</title>
+    <style>
+        :root {
+            --bg: #f5f7f9;
+            --surface: #ffffff;
+            --ink: #172027;
+            --muted: #65717d;
+            --line: #d9e1e7;
+            --blue: #246fba;
+            --green: #18875f;
+            --amber: #9b6a12;
+            --shadow: 0 14px 36px rgba(22, 32, 39, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+        }
+
+        aside {
+            background: #162433;
+            color: #f7fafc;
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .brand span {
+            display: block;
+            margin-top: 6px;
+            color: #b7c4cf;
+            font-size: 13px;
+        }
+
+        nav {
+            display: grid;
+            gap: 8px;
+        }
+
+        .nav-item {
+            min-height: 38px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: #d7e0e7;
+        }
+
+        .nav-item.active {
+            background: var(--blue);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .note {
+            margin-top: auto;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            padding: 12px;
+            color: #d7e0e7;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        main {
+            padding: 24px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .lead {
+            max-width: 860px;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .metric,
+        .panel,
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .metric {
+            min-height: 112px;
+            padding: 14px;
+        }
+
+        .metric span {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 27px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+            gap: 14px;
+        }
+
+        .panel {
+            overflow: hidden;
+        }
+
+        .panel header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel header span {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .panel header h3 {
+            margin: 4px 0 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        th {
+            color: var(--muted);
+            background: #f7fafb;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            display: inline-flex;
+            min-height: 24px;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0 9px;
+            background: #e6f0fb;
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .badge.green {
+            background: #e4f5ee;
+            color: var(--green);
+        }
+
+        .badge.amber {
+            background: #fff3d6;
+            color: var(--amber);
+        }
+
+        .stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            padding: 14px;
+        }
+
+        .card h3 {
+            margin: 0 0 7px;
+            font-size: 17px;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.4;
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .app,
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 560px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside>
+            <div class="brand">
+                <h1>Icaro</h1>
+                <span>Processos preparatorios de licitacao</span>
+            </div>
+            <nav>
+                <div class="nav-item active">Pesquisa de precos</div>
+                <div class="nav-item">Atas para carona</div>
+                <div class="nav-item">Processo preparatorio</div>
+                <div class="nav-item">Relatorios</div>
+            </nav>
+            <div class="note">
+                Demo conceitual com dados ficticios. O objetivo e apoiar a Administracao na fase preparatoria, com rastreabilidade e memoria de calculo.
+            </div>
+        </aside>
+
+        <main>
+            <p class="eyebrow">Novo projeto paralelo</p>
+            <h2>Projeto Icaro</h2>
+            <p class="lead">
+                Ferramenta administrativa para pesquisar precos, localizar atas vigentes para possivel adesao e montar evidencias do processo preparatorio conforme criterios legais e de controle.
+            </p>
+
+            <section class="metrics">
+                <article class="metric"><span>Fontes coletadas</span><strong>18</strong></article>
+                <article class="metric"><span>Atas candidatas</span><strong>6</strong></article>
+                <article class="metric"><span>Preco estimado</span><strong>R$ 42.800</strong></article>
+                <article class="metric"><span>Alertas</span><strong>3</strong></article>
+            </section>
+
+            <section class="grid">
+                <article class="panel">
+                    <header>
+                        <span>Quadro comparativo ficticio</span>
+                        <h3>Pesquisa de mercado</h3>
+                    </header>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fonte</th>
+                                <th>Objeto</th>
+                                <th>Valor unitario</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PNCP</td>
+                                <td>Aquisicao de notebooks administrativos</td>
+                                <td>R$ 4.280</td>
+                                <td><span class="badge green">Aproveitada</span></td>
+                            </tr>
+                            <tr>
+                                <td>Ata SRP</td>
+                                <td>Notebook corporativo com garantia onsite</td>
+                                <td>R$ 4.410</td>
+                                <td><span class="badge green">Aderente</span></td>
+                            </tr>
+                            <tr>
+                                <td>PNCP</td>
+                                <td>Equipamento similar com especificacao inferior</td>
+                                <td>R$ 2.190</td>
+                                <td><span class="badge amber">Descartar</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <div class="stack">
+                    <article class="card">
+                        <h3>Checklist de conformidade</h3>
+                        <p>Descricao do objeto, fontes consultadas, serie de precos, metodo estatistico, memoria de calculo e justificativas.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Atas para carona</h3>
+                        <p>Busca por vigencia, orgao gerenciador, fornecedor, preco registrado, aderencia e compatibilidade com mercado.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Relatorio final</h3>
+                        <p>Geracao de documento com evidencias, calculos, descartes e conclusao tecnica para anexar ao processo.</p>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
+

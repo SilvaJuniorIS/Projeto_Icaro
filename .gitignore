@@ -1,0 +1,16 @@
+venv/
+__venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+
+.env
+.api_key
+
+*.zip
+output/*.xlsx
+output/*.csv
+

@@ -1,0 +1,33 @@
+{
+    "fontes_publicas": [
+        {
+            "id": "pncp",
+            "nome": "Portal Nacional de Contratacoes Publicas",
+            "tipo": "banco_publico",
+            "base_legal": "Lei 14.133/2021, art. 23",
+            "ativo": true
+        },
+        {
+            "id": "painel_precos",
+            "nome": "Painel de Precos",
+            "tipo": "sistema_oficial",
+            "base_legal": "IN SEGES/ME 65/2021",
+            "ativo": false
+        },
+        {
+            "id": "atas_registro_precos",
+            "nome": "Atas de Registro de Precos",
+            "tipo": "registro_precos",
+            "base_legal": "Decreto 11.462/2023",
+            "ativo": true
+        }
+    ],
+    "criterios_minimos": {
+        "registrar_data_hora_acesso": true,
+        "registrar_url_fonte": true,
+        "registrar_responsavel": true,
+        "exigir_justificativa_descarte": true,
+        "preferir_multiplas_fontes": true
+    }
+}
+
