@@ -31,6 +31,146 @@ def _style_header(ws, row: int = 1) -> None:
         cell.alignment = Alignment(horizontal="center")
 
 
+def _fmt_money(value: Any) -> str:
+    if value is None:
+        return "-"
+    return f"R$ {float(value):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _texto(value: Any) -> str:
+    text = str(value or "").strip()
+    return text or "-"
+
+
+def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
+    snapshot = export_snapshot(processo_id)
+    if not snapshot:
+        return None
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    processo: dict[str, Any] = snapshot["processo"]
+    resumo: dict[str, Any] = snapshot["resumo"]
+    resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
+    fontes: list[dict[str, Any]] = snapshot["fontes"]
+    atas: list[dict[str, Any]] = snapshot["atas"]
+
+    linhas = [
+        f"# Relatorio administrativo - {_texto(processo.get('titulo'))}",
+        "",
+        f"Gerado em: {snapshot['gerado_em']}",
+        "",
+        "## 1. Identificacao do processo",
+        "",
+        f"- Objeto: {_texto(processo.get('descricao_objeto'))}",
+        f"- Categoria: {_texto(processo.get('categoria'))}",
+        f"- Unidade: {_texto(processo.get('unidade'))}",
+        f"- Quantidade estimada: {_texto(processo.get('quantidade'))}",
+        f"- Local de execucao/entrega: {_texto(processo.get('local_execucao'))}",
+        f"- Responsavel: {_texto(processo.get('responsavel'))}",
+        f"- Status: {_texto(processo.get('status'))}",
+        "",
+        "## 2. Pesquisa de precos",
+        "",
+        f"- Fontes registradas: {resumo.get('fontes_total', 0)}",
+        f"- Fontes aproveitadas: {resumo.get('fontes_aproveitadas', 0)}",
+        f"- Fontes descartadas: {resumo.get('fontes_descartadas', 0)}",
+        f"- Menor valor: {_fmt_money(resumo.get('menor'))}",
+        f"- Maior valor: {_fmt_money(resumo.get('maior'))}",
+        f"- Media: {_fmt_money(resumo.get('media'))}",
+        f"- Mediana: {_fmt_money(resumo.get('mediana'))}",
+        f"- Preco estimado sugerido pela mediana: {_fmt_money(resumo.get('preco_estimado_mediana'))}",
+        f"- Outliers identificados pelo criterio IQR: {resumo.get('outliers', 0)}",
+        "",
+        "### Fontes consultadas",
+        "",
+        "| Uso | Tipo | Item | Valor unitario | Orgao | Fornecedor | Justificativa/observacoes |",
+        "| --- | --- | --- | ---: | --- | --- | --- |",
+    ]
+
+    if fontes:
+        for fonte in fontes:
+            uso = "Aproveitada" if fonte.get("aproveitada") else "Descartada"
+            observacao = fonte.get("justificativa_descarte") or fonte.get("observacoes")
+            linhas.append(
+                "| "
+                + " | ".join(
+                    [
+                        uso,
+                        _texto(fonte.get("fonte_tipo")),
+                        _texto(fonte.get("descricao_item")),
+                        _fmt_money(fonte.get("valor_unitario")),
+                        _texto(fonte.get("orgao")),
+                        _texto(fonte.get("fornecedor")),
+                        _texto(observacao),
+                    ]
+                )
+                + " |"
+            )
+    else:
+        linhas.append("| - | - | Nenhuma fonte registrada | - | - | - | - |")
+
+    linhas.extend(
+        [
+            "",
+            "## 3. Atas para possivel adesao",
+            "",
+            f"- Atas registradas: {resumo_atas.get('atas_total', 0)}",
+            f"- Atas vigentes ou sem data final informada: {resumo_atas.get('atas_vigentes', 0)}",
+            f"- Atas potencialmente aderentes: {resumo_atas.get('atas_potencialmente_aderentes', 0)}",
+            "",
+            "| Aderencia | Ata | Orgao gerenciador | Fornecedor | Valor unitario | Vigencia | Observacoes |",
+            "| --- | --- | --- | --- | ---: | --- | --- |",
+        ]
+    )
+
+    if atas:
+        for ata in atas:
+            vigencia = f"{_texto(ata.get('vigencia_inicio'))} a {_texto(ata.get('vigencia_fim'))}"
+            linhas.append(
+                "| "
+                + " | ".join(
+                    [
+                        _texto(ata.get("aderencia")),
+                        _texto(ata.get("numero")),
+                        _texto(ata.get("orgao_gerenciador")),
+                        _texto(ata.get("fornecedor")),
+                        _fmt_money(ata.get("valor_unitario")),
+                        vigencia,
+                        _texto(ata.get("observacoes")),
+                    ]
+                )
+                + " |"
+            )
+    else:
+        linhas.append("| - | Nenhuma ata registrada | - | - | - | - | - |")
+
+    linhas.extend(
+        [
+            "",
+            "## 4. Checklist administrativo inicial",
+            "",
+            f"- [{'x' if fontes else ' '}] Ha fontes de preco registradas.",
+            f"- [{'x' if resumo.get('fontes_aproveitadas', 0) >= 3 else ' '}] Ha pelo menos tres fontes aproveitadas.",
+            f"- [{'x' if resumo.get('fontes_descartadas', 0) == 0 else ' '}] Descartes foram evitados ou devem estar justificados.",
+            f"- [{'x' if atas else ' '}] Atas de registro de precos foram verificadas quando cabivel.",
+            f"- [{'x' if resumo_atas.get('atas_potencialmente_aderentes', 0) else ' '}] Ha ata potencialmente aderente para analise de carona.",
+            "- [ ] Responsavel deve revisar adequacao tecnica, juridica e regulamentacao local.",
+            "",
+            "## 5. Observacao",
+            "",
+            "Este relatorio apoia a instrucao administrativa e nao substitui a analise tecnica, juridica ou de controle interno.",
+            "",
+        ]
+    )
+
+    filename = f"icaro_relatorio_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.md"
+    path = output_dir / filename
+    path.write_text("\n".join(linhas), encoding="utf-8")
+    return path
+
+
 def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
     snapshot = export_snapshot(processo_id)
     if not snapshot:

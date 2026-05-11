@@ -23,7 +23,7 @@ from src.db import (
     resumo_atas,
     resumo_pesquisa,
 )
-from src.reports import gerar_xlsx_processo
+from src.reports import gerar_relatorio_markdown, gerar_xlsx_processo
 
 
 app = FastAPI(title="Icaro")
@@ -192,4 +192,16 @@ def exportar_xlsx(processo_id: int) -> FileResponse:
         path,
         filename=path.name,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@app.get("/processos/{processo_id}/export/md")
+def exportar_relatorio_md(processo_id: int) -> FileResponse:
+    path = gerar_relatorio_markdown(processo_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return FileResponse(
+        path,
+        filename=path.name,
+        media_type="text/markdown; charset=utf-8",
     )

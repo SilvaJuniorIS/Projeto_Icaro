@@ -669,10 +669,13 @@
                             <span>Relatorios</span>
                             <h3>Exportacoes do processo</h3>
                         </div>
-                        <button onclick="exportarXlsx()">Exportar XLSX</button>
+                        <div class="actions">
+                            <button onclick="exportarRelatorioMd()">Relatorio MD</button>
+                            <button onclick="exportarXlsx()">Exportar XLSX</button>
+                        </div>
                     </div>
                     <div class="panel-body">
-                        <p class="lead">O XLSX consolida processo, fontes de preco, resumo estatistico e atas registradas para a instrucao administrativa.</p>
+                        <p class="lead">O relatorio MD consolida a narrativa administrativa, checklist, fontes, calculos e atas. O XLSX mantem os dados em planilha para conferencia e reaproveitamento.</p>
                     </div>
                 </div>
             </section>
@@ -930,6 +933,15 @@
             }
             window.location.href = `/processos/${processoSelecionado}/export/xlsx`;
             setStatus('Exportacao XLSX iniciada');
+        }
+
+        function exportarRelatorioMd() {
+            if (!processoSelecionado) {
+                setStatus('Selecione um processo para exportar');
+                return;
+            }
+            window.location.href = `/processos/${processoSelecionado}/export/md`;
+            setStatus('Relatorio MD iniciado');
         }
 
         carregarProcessos()
