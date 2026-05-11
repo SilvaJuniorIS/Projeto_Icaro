@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import re
+from html import escape
 from pathlib import Path
 from typing import Any
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -10,6 +12,8 @@ from openpyxl.utils import get_column_letter
 
 from src.config import OUTPUT_DIR
 from src.db import export_snapshot, now_iso
+from src.checklist import gerar_checklist
+from src.comparability import avaliar_comparabilidade
 
 
 def _safe_name(value: str) -> str:
@@ -55,6 +59,8 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
     fontes: list[dict[str, Any]] = snapshot["fontes"]
     atas: list[dict[str, Any]] = snapshot["atas"]
+    checklist = gerar_checklist(snapshot)
+    comparabilidade = avaliar_comparabilidade(snapshot)
 
     linhas = [
         f"# Relatorio administrativo - {_texto(processo.get('titulo'))}",
@@ -81,9 +87,10 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
         f"- Media: {_fmt_money(resumo.get('media'))}",
         f"- Mediana: {_fmt_money(resumo.get('mediana'))}",
         f"- Preco estimado sugerido pela mediana: {_fmt_money(resumo.get('preco_estimado_mediana'))}",
-        f"- Outliers identificados pelo criterio IQR: {resumo.get('outliers', 0)}",
-        "",
-        "### Fontes consultadas",
+            f"- Outliers identificados pelo criterio IQR: {resumo.get('outliers', 0)}",
+            f"- Fontes com comparabilidade alta: {sum(1 for item in comparabilidade['itens'] if item['classificacao'] == 'alta')}",
+            "",
+            "### Fontes consultadas",
         "",
         "| Uso | Tipo | Item | Valor unitario | Orgao | Fornecedor | Justificativa/observacoes |",
         "| --- | --- | --- | ---: | --- | --- | --- |",
@@ -151,14 +158,33 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
             "",
             "## 4. Checklist administrativo inicial",
             "",
-            f"- [{'x' if fontes else ' '}] Ha fontes de preco registradas.",
-            f"- [{'x' if resumo.get('fontes_aproveitadas', 0) >= 3 else ' '}] Ha pelo menos tres fontes aproveitadas.",
-            f"- [{'x' if resumo.get('fontes_descartadas', 0) == 0 else ' '}] Descartes foram evitados ou devem estar justificados.",
-            f"- [{'x' if atas else ' '}] Atas de registro de precos foram verificadas quando cabivel.",
-            f"- [{'x' if resumo_atas.get('atas_potencialmente_aderentes', 0) else ' '}] Ha ata potencialmente aderente para analise de carona.",
-            "- [ ] Responsavel deve revisar adequacao tecnica, juridica e regulamentacao local.",
+        ]
+    )
+    for item in checklist:
+        linhas.append(f"- [{'x' if item['ok'] else ' '}] {item['titulo']}: {item['detalhe']}")
+
+    linhas.extend(
+        [
             "",
-            "## 5. Observacao",
+            "## 5. Comparabilidade",
+            "",
+            "| Fonte | Classificacao | Score | Similaridade | Desvio da mediana |",
+            "| --- | --- | ---: | ---: | ---: |",
+        ]
+    )
+    if comparabilidade["itens"]:
+        for item in comparabilidade["itens"]:
+            desvio = "-" if item["desvio_percentual_mediana"] is None else f"{item['desvio_percentual_mediana']}%"
+            linhas.append(
+                f"| {_texto(item['descricao_item'])} | {item['classificacao']} | {item['score']} | {item['similaridade_objeto']} | {desvio} |"
+            )
+    else:
+        linhas.append("| Nenhuma fonte registrada | - | - | - | - |")
+
+    linhas.extend(
+        [
+            "",
+            "## 6. Observacao",
             "",
             "Este relatorio apoia a instrucao administrativa e nao substitui a analise tecnica, juridica ou de controle interno.",
             "",
@@ -168,6 +194,135 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     filename = f"icaro_relatorio_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.md"
     path = output_dir / filename
     path.write_text("\n".join(linhas), encoding="utf-8")
+    return path
+
+
+def _markdown_relatorio(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> str | None:
+    path = gerar_relatorio_markdown(processo_id, output_dir)
+    if not path:
+        return None
+    return path.read_text(encoding="utf-8")
+
+
+def gerar_relatorio_html(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
+    markdown = _markdown_relatorio(processo_id, output_dir)
+    if markdown is None:
+        return None
+    output_dir = Path(output_dir)
+    processo = export_snapshot(processo_id)["processo"]
+    body = []
+    in_table = False
+    for line in markdown.splitlines():
+        if line.startswith("# "):
+            if in_table:
+                body.append("</table>")
+                in_table = False
+            body.append(f"<h1>{escape(line[2:])}</h1>")
+        elif line.startswith("## "):
+            if in_table:
+                body.append("</table>")
+                in_table = False
+            body.append(f"<h2>{escape(line[3:])}</h2>")
+        elif line.startswith("### "):
+            if in_table:
+                body.append("</table>")
+                in_table = False
+            body.append(f"<h3>{escape(line[4:])}</h3>")
+        elif line.startswith("| ") and " --- " not in line:
+            cells = [escape(cell.strip()) for cell in line.strip("|").split("|")]
+            if not in_table:
+                body.append("<table>")
+                in_table = True
+            tag = "th" if not body[-1].startswith("<tr") else "td"
+            body.append("<tr>" + "".join(f"<{tag}>{cell}</{tag}>" for cell in cells) + "</tr>")
+        elif line.startswith("| "):
+            continue
+        elif line.startswith("- "):
+            if in_table:
+                body.append("</table>")
+                in_table = False
+            body.append(f"<p>{escape(line)}</p>")
+        elif line.strip():
+            if in_table:
+                body.append("</table>")
+                in_table = False
+            body.append(f"<p>{escape(line)}</p>")
+    if in_table:
+        body.append("</table>")
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatorio Icaro</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; color: #172027; margin: 32px; line-height: 1.45; }}
+    h1, h2, h3 {{ color: #16364d; }}
+    table {{ width: 100%; border-collapse: collapse; margin: 12px 0 22px; font-size: 13px; }}
+    th, td {{ border: 1px solid #d9e1e7; padding: 8px; text-align: left; vertical-align: top; }}
+    th {{ background: #eef3f5; }}
+    @media print {{ body {{ margin: 18mm; }} button {{ display: none; }} }}
+  </style>
+</head>
+<body>
+  <button onclick="window.print()">Imprimir / salvar em PDF</button>
+  {''.join(body)}
+</body>
+</html>"""
+    filename = f"icaro_relatorio_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.html"
+    path = output_dir / filename
+    path.write_text(html, encoding="utf-8")
+    return path
+
+
+def _docx_document_xml(markdown: str) -> str:
+    paragraphs = []
+    for line in markdown.splitlines():
+        if not line.strip() or line.startswith("| ---"):
+            continue
+        text = line
+        style = ""
+        if line.startswith("# "):
+            text = line[2:]
+            style = '<w:pStyle w:val="Title"/>'
+        elif line.startswith("## "):
+            text = line[3:]
+            style = '<w:pStyle w:val="Heading1"/>'
+        elif line.startswith("### "):
+            text = line[4:]
+            style = '<w:pStyle w:val="Heading2"/>'
+        escaped = escape(text)
+        paragraphs.append(f"<w:p><w:pPr>{style}</w:pPr><w:r><w:t>{escaped}</w:t></w:r></w:p>")
+    return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    %s
+    <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+  </w:body>
+</w:document>""" % "".join(paragraphs)
+
+
+def gerar_relatorio_docx(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
+    markdown = _markdown_relatorio(processo_id, output_dir)
+    if markdown is None:
+        return None
+    output_dir = Path(output_dir)
+    processo = export_snapshot(processo_id)["processo"]
+    filename = f"icaro_relatorio_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.docx"
+    path = output_dir / filename
+    content_types = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>"""
+    rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>"""
+    with ZipFile(path, "w", ZIP_DEFLATED) as zf:
+        zf.writestr("[Content_Types].xml", content_types)
+        zf.writestr("_rels/.rels", rels)
+        zf.writestr("word/document.xml", _docx_document_xml(markdown))
     return path
 
 
@@ -184,6 +339,8 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
     resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
     fontes: list[dict[str, Any]] = snapshot["fontes"]
     atas: list[dict[str, Any]] = snapshot["atas"]
+    checklist = gerar_checklist(snapshot)
+    comparabilidade = avaliar_comparabilidade(snapshot)
 
     wb = Workbook()
     ws = wb.active
@@ -265,6 +422,29 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
         ws_atas.append([ata.get(header) for header in ata_headers])
     _style_header(ws_atas)
     _auto_width(ws_atas)
+
+    ws_checklist = wb.create_sheet("Checklist")
+    ws_checklist.append(["grupo", "titulo", "ok", "detalhe"])
+    for item in checklist:
+        ws_checklist.append([item["grupo"], item["titulo"], "sim" if item["ok"] else "nao", item["detalhe"]])
+    _style_header(ws_checklist)
+    _auto_width(ws_checklist)
+
+    ws_comp = wb.create_sheet("Comparabilidade")
+    ws_comp.append(["fonte_id", "item", "tipo", "valor", "similaridade", "desvio_mediana", "score", "classificacao"])
+    for item in comparabilidade["itens"]:
+        ws_comp.append([
+            item["fonte_id"],
+            item["descricao_item"],
+            item["fonte_tipo"],
+            item["valor_unitario"],
+            item["similaridade_objeto"],
+            item["desvio_percentual_mediana"],
+            item["score"],
+            item["classificacao"],
+        ])
+    _style_header(ws_comp)
+    _auto_width(ws_comp)
 
     filename = f"icaro_processo_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.xlsx"
     path = output_dir / filename

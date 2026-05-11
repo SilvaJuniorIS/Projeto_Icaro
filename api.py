@@ -8,6 +8,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from src.config import BASE_DIR
+from src.checklist import gerar_checklist
+from src.comparability import avaliar_comparabilidade
 from src.db import (
     create_ata,
     create_fonte,
@@ -23,7 +25,8 @@ from src.db import (
     resumo_atas,
     resumo_pesquisa,
 )
-from src.reports import gerar_relatorio_markdown, gerar_xlsx_processo
+from src.pncp import buscar_contratacoes
+from src.reports import gerar_relatorio_docx, gerar_relatorio_html, gerar_relatorio_markdown, gerar_xlsx_processo
 
 
 app = FastAPI(title="Icaro")
@@ -77,6 +80,14 @@ class AtaRequest(BaseModel):
     observacoes: str = ""
 
 
+class PncpBuscaRequest(BaseModel):
+    termo: str
+    data_inicial: str = ""
+    data_final: str = ""
+    pagina: int = 1
+    tamanho_pagina: int = 10
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db()
@@ -116,6 +127,24 @@ def obter_processo(processo_id: int) -> dict[str, Any]:
         "resumo": resumo_pesquisa(processo_id),
         "resumo_atas": resumo_atas(processo_id),
     }
+
+
+@app.get("/processos/{processo_id}/checklist")
+def checklist(processo_id: int) -> dict[str, Any]:
+    data = export_snapshot(processo_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    itens = gerar_checklist(data)
+    progresso = itens[0]["progresso"] if itens else {"concluidos": 0, "total": 0}
+    return {"checklist": itens, "progresso": progresso}
+
+
+@app.get("/processos/{processo_id}/comparabilidade")
+def comparabilidade(processo_id: int) -> dict[str, Any]:
+    data = export_snapshot(processo_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return avaliar_comparabilidade(data)
 
 
 @app.post("/fontes")
@@ -168,6 +197,17 @@ def atas(processo_id: int) -> dict[str, Any]:
     }
 
 
+@app.post("/pncp/buscar")
+def pncp_buscar(req: PncpBuscaRequest) -> dict[str, Any]:
+    return buscar_contratacoes(
+        termo=req.termo,
+        data_inicial=req.data_inicial or None,
+        data_final=req.data_final or None,
+        pagina=req.pagina,
+        tamanho_pagina=req.tamanho_pagina,
+    )
+
+
 @app.get("/processos/{processo_id}/resumo")
 def resumo(processo_id: int) -> dict[str, Any]:
     if not get_processo(processo_id):
@@ -204,4 +244,24 @@ def exportar_relatorio_md(processo_id: int) -> FileResponse:
         path,
         filename=path.name,
         media_type="text/markdown; charset=utf-8",
+    )
+
+
+@app.get("/processos/{processo_id}/export/html")
+def exportar_relatorio_html(processo_id: int) -> FileResponse:
+    path = gerar_relatorio_html(processo_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return FileResponse(path, filename=path.name, media_type="text/html; charset=utf-8")
+
+
+@app.get("/processos/{processo_id}/export/docx")
+def exportar_relatorio_docx(processo_id: int) -> FileResponse:
+    path = gerar_relatorio_docx(processo_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return FileResponse(
+        path,
+        filename=path.name,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )

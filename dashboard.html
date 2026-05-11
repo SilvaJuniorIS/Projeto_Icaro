@@ -368,7 +368,9 @@
             </div>
             <nav>
                 <button class="nav-item active" onclick="scrollToSection('pesquisaSection')">Pesquisa de precos</button>
+                <button class="nav-item" onclick="scrollToSection('pncpSection')">Busca PNCP</button>
                 <button class="nav-item" onclick="scrollToSection('atasSection')">Atas para carona</button>
+                <button class="nav-item" onclick="scrollToSection('checklistSection')">Checklist</button>
                 <button class="nav-item" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
             </nav>
             <div class="note">
@@ -559,6 +561,61 @@
                 </div>
             </section>
 
+            <section class="grid" id="pncpSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>PNCP</span>
+                            <h3>Buscar contratacoes publicadas</h3>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form id="pncpForm" onsubmit="buscarPncp(event)">
+                            <div class="form-grid">
+                                <label class="wide">
+                                    <span>Termo de busca</span>
+                                    <input id="pncpTermo" placeholder="ex: notebook, limpeza predial, papel A4">
+                                </label>
+                                <label>
+                                    <span>Data inicial</span>
+                                    <input id="pncpDataInicial" placeholder="AAAAMMDD">
+                                </label>
+                                <label>
+                                    <span>Data final</span>
+                                    <input id="pncpDataFinal" placeholder="AAAAMMDD">
+                                </label>
+                            </div>
+                            <div class="actions">
+                                <button class="primary" type="submit">Buscar PNCP</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Resultados PNCP</span>
+                            <h3>Contratacoes encontradas</h3>
+                        </div>
+                        <span class="badge" id="pncpResumoBadge">0 resultados</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Objeto</th>
+                                    <th>Orgao</th>
+                                    <th>Modalidade</th>
+                                    <th>Valor estimado</th>
+                                    <th>Publicacao</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPncp"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <section class="grid" id="atasSection" style="margin-top: 14px;">
                 <div class="panel">
                     <div class="panel-title">
@@ -662,6 +719,44 @@
                 </div>
             </section>
 
+            <section class="grid" id="checklistSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Checklist</span>
+                            <h3>Processo preparatorio</h3>
+                        </div>
+                        <span class="badge" id="checklistResumoBadge">0/0</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="list" id="listaChecklist"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Comparabilidade</span>
+                            <h3>Aderencia das fontes</h3>
+                        </div>
+                        <button onclick="carregarProcessoSelecionado()">Atualizar</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Classificacao</th>
+                                    <th>Fonte</th>
+                                    <th>Score</th>
+                                    <th>Similaridade</th>
+                                    <th>Desvio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaComparabilidade"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <section id="relatoriosSection" style="margin-top: 14px;">
                 <div class="panel">
                     <div class="panel-title">
@@ -671,6 +766,8 @@
                         </div>
                         <div class="actions">
                             <button onclick="exportarRelatorioMd()">Relatorio MD</button>
+                            <button onclick="exportarRelatorioDocx()">DOCX</button>
+                            <button onclick="exportarRelatorioHtml()">PDF/Impressao</button>
                             <button onclick="exportarXlsx()">Exportar XLSX</button>
                         </div>
                     </div>
@@ -768,6 +865,9 @@
                 document.getElementById('tabelaFontes').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
                 document.getElementById('atasResumoBadge').textContent = '0 atas';
                 document.getElementById('tabelaAtas').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
+                document.getElementById('checklistResumoBadge').textContent = '0/0';
+                document.getElementById('listaChecklist').innerHTML = '<p>Selecione ou crie um processo.</p>';
+                document.getElementById('tabelaComparabilidade').innerHTML = '<tr><td colspan="5">Selecione ou crie um processo.</td></tr>';
                 return;
             }
             const res = await api(`/processos/${processoSelecionado}`);
@@ -777,6 +877,8 @@
             atualizarResumoAtas(data.resumo_atas);
             renderFontes(data.fontes);
             renderAtas(data.atas);
+            await carregarChecklist();
+            await carregarComparabilidade();
         }
 
         function atualizarResumo(resumo) {
@@ -832,6 +934,89 @@
                     <td>${fmtMoney.format(Number(item.valor_unitario || 0))}</td>
                     <td>${item.vigencia_inicio || '-'} a ${item.vigencia_fim || '-'}</td>
                     <td><button class="danger" onclick="excluirAta(${item.id})">Excluir</button></td>
+                `;
+                tabela.appendChild(row);
+            });
+        }
+
+        async function carregarChecklist() {
+            const res = await api(`/processos/${processoSelecionado}/checklist`);
+            const data = await res.json();
+            const lista = document.getElementById('listaChecklist');
+            lista.innerHTML = '';
+            document.getElementById('checklistResumoBadge').textContent = `${data.progresso.concluidos}/${data.progresso.total}`;
+            data.checklist.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'processo-item';
+                div.innerHTML = `<strong>${item.ok ? 'OK' : 'Pendente'} - ${item.titulo}</strong><small>${item.grupo} | ${item.detalhe}</small>`;
+                lista.appendChild(div);
+            });
+        }
+
+        async function carregarComparabilidade() {
+            const res = await api(`/processos/${processoSelecionado}/comparabilidade`);
+            const data = await res.json();
+            const tabela = document.getElementById('tabelaComparabilidade');
+            tabela.innerHTML = '';
+            if (!data.itens.length) {
+                tabela.innerHTML = '<tr><td colspan="5">Nenhuma fonte para comparar.</td></tr>';
+                return;
+            }
+            data.itens.forEach(item => {
+                const row = document.createElement('tr');
+                const badgeClass = item.classificacao === 'alta' ? 'green' : item.classificacao === 'media' ? '' : 'amber';
+                const desvio = item.desvio_percentual_mediana === null ? '-' : `${item.desvio_percentual_mediana}%`;
+                row.innerHTML = `
+                    <td><span class="badge ${badgeClass}">${item.classificacao}</span></td>
+                    <td>${item.descricao_item || '-'}</td>
+                    <td>${item.score}</td>
+                    <td>${item.similaridade_objeto}</td>
+                    <td>${desvio}</td>
+                `;
+                tabela.appendChild(row);
+            });
+        }
+
+        async function buscarPncp(event) {
+            event.preventDefault();
+            const payload = {
+                termo: document.getElementById('pncpTermo').value.trim(),
+                data_inicial: document.getElementById('pncpDataInicial').value.trim(),
+                data_final: document.getElementById('pncpDataFinal').value.trim(),
+                tamanho_pagina: 10
+            };
+            setStatus('Consultando PNCP...');
+            const res = await api('/pncp/buscar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            renderPncp(data);
+            setStatus(data.ok ? 'Consulta PNCP concluida' : 'PNCP indisponivel');
+        }
+
+        function renderPncp(data) {
+            const tabela = document.getElementById('tabelaPncp');
+            tabela.innerHTML = '';
+            const resultados = data.resultados || [];
+            document.getElementById('pncpResumoBadge').textContent = `${resultados.length} resultados`;
+            if (!data.ok) {
+                tabela.innerHTML = `<tr><td colspan="5">${data.erro}</td></tr>`;
+                return;
+            }
+            if (!resultados.length) {
+                tabela.innerHTML = '<tr><td colspan="5">Nenhum resultado encontrado.</td></tr>';
+                return;
+            }
+            resultados.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.objeto || '-'}</td>
+                    <td>${item.orgao || item.unidade || '-'}</td>
+                    <td>${item.modalidade || '-'}</td>
+                    <td>${fmtMoney.format(Number(item.valor_estimado || 0))}</td>
+                    <td>${item.data_publicacao || '-'}</td>
                 `;
                 tabela.appendChild(row);
             });
@@ -942,6 +1127,24 @@
             }
             window.location.href = `/processos/${processoSelecionado}/export/md`;
             setStatus('Relatorio MD iniciado');
+        }
+
+        function exportarRelatorioDocx() {
+            if (!processoSelecionado) {
+                setStatus('Selecione um processo para exportar');
+                return;
+            }
+            window.location.href = `/processos/${processoSelecionado}/export/docx`;
+            setStatus('Relatorio DOCX iniciado');
+        }
+
+        function exportarRelatorioHtml() {
+            if (!processoSelecionado) {
+                setStatus('Selecione um processo para exportar');
+                return;
+            }
+            window.location.href = `/processos/${processoSelecionado}/export/html`;
+            setStatus('Relatorio para impressao iniciado');
         }
 
         carregarProcessos()
