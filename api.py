@@ -9,14 +9,18 @@ from pydantic import BaseModel, Field
 
 from src.config import BASE_DIR
 from src.db import (
+    create_ata,
     create_fonte,
     create_processo,
+    delete_ata,
     delete_fonte,
     export_snapshot,
     get_processo,
     init_db,
+    list_atas,
     list_fontes,
     list_processos,
+    resumo_atas,
     resumo_pesquisa,
 )
 from src.reports import gerar_xlsx_processo
@@ -56,6 +60,23 @@ class FontePrecoRequest(BaseModel):
     observacoes: str = ""
 
 
+class AtaRequest(BaseModel):
+    processo_id: int
+    numero: str = ""
+    orgao_gerenciador: str = ""
+    fornecedor: str = ""
+    objeto: str
+    item: str = ""
+    valor_unitario: float = Field(ge=0)
+    vigencia_inicio: str = ""
+    vigencia_fim: str = ""
+    quantidade_registrada: float = 0
+    quantidade_disponivel_estimativa: float = 0
+    url: str = ""
+    aderencia: str = "indefinida"
+    observacoes: str = ""
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db()
@@ -91,7 +112,9 @@ def obter_processo(processo_id: int) -> dict[str, Any]:
     return {
         "processo": processo,
         "fontes": list_fontes(processo_id),
+        "atas": list_atas(processo_id),
         "resumo": resumo_pesquisa(processo_id),
+        "resumo_atas": resumo_atas(processo_id),
     }
 
 
@@ -113,6 +136,36 @@ def excluir_fonte(fonte_id: int) -> dict[str, Any]:
     if not deleted:
         raise HTTPException(status_code=404, detail="Fonte nao encontrada")
     return {"status": "deleted", "id": fonte_id}
+
+
+@app.post("/atas")
+def criar_ata(req: AtaRequest) -> dict[str, Any]:
+    if not get_processo(req.processo_id):
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    ata_id = create_ata(req.model_dump())
+    return {
+        "id": ata_id,
+        "atas": list_atas(req.processo_id),
+        "resumo_atas": resumo_atas(req.processo_id),
+    }
+
+
+@app.delete("/atas/{ata_id}")
+def excluir_ata(ata_id: int) -> dict[str, Any]:
+    deleted = delete_ata(ata_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Ata nao encontrada")
+    return {"status": "deleted", "id": ata_id}
+
+
+@app.get("/processos/{processo_id}/atas")
+def atas(processo_id: int) -> dict[str, Any]:
+    if not get_processo(processo_id):
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return {
+        "atas": list_atas(processo_id),
+        "resumo_atas": resumo_atas(processo_id),
+    }
 
 
 @app.get("/processos/{processo_id}/resumo")

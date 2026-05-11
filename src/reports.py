@@ -41,7 +41,9 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
 
     processo: dict[str, Any] = snapshot["processo"]
     resumo: dict[str, Any] = snapshot["resumo"]
+    resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
     fontes: list[dict[str, Any]] = snapshot["fontes"]
+    atas: list[dict[str, Any]] = snapshot["atas"]
 
     wb = Workbook()
     ws = wb.active
@@ -65,6 +67,8 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
         "outliers",
     ]:
         ws.append([chave, resumo.get(chave)])
+    for chave in ["atas_total", "atas_vigentes", "atas_potencialmente_aderentes"]:
+        ws.append([chave, resumo_atas.get(chave)])
     _style_header(ws)
     _auto_width(ws)
 
@@ -98,6 +102,29 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
         ws_fontes.append([fonte.get(header) for header in headers])
     _style_header(ws_fontes)
     _auto_width(ws_fontes)
+
+    ws_atas = wb.create_sheet("Atas")
+    ata_headers = [
+        "id",
+        "numero",
+        "orgao_gerenciador",
+        "fornecedor",
+        "objeto",
+        "item",
+        "valor_unitario",
+        "vigencia_inicio",
+        "vigencia_fim",
+        "quantidade_registrada",
+        "quantidade_disponivel_estimativa",
+        "url",
+        "aderencia",
+        "observacoes",
+    ]
+    ws_atas.append(ata_headers)
+    for ata in atas:
+        ws_atas.append([ata.get(header) for header in ata_headers])
+    _style_header(ws_atas)
+    _auto_width(ws_atas)
 
     filename = f"icaro_processo_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.xlsx"
     path = output_dir / filename

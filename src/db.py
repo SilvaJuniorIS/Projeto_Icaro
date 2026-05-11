@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
@@ -204,6 +203,90 @@ def delete_fonte(fonte_id: int, db_path: Path | str = DB_PATH) -> bool:
         return cur.rowcount > 0
 
 
+def create_ata(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> int:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO atas (
+                processo_id, numero, orgao_gerenciador, fornecedor, objeto, item,
+                valor_unitario, vigencia_inicio, vigencia_fim, quantidade_registrada,
+                quantidade_disponivel_estimativa, url, aderencia, observacoes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                int(payload["processo_id"]),
+                payload.get("numero", ""),
+                payload.get("orgao_gerenciador", ""),
+                payload.get("fornecedor", ""),
+                payload.get("objeto", ""),
+                payload.get("item", ""),
+                float(payload.get("valor_unitario") or 0),
+                payload.get("vigencia_inicio", ""),
+                payload.get("vigencia_fim", ""),
+                float(payload.get("quantidade_registrada") or 0),
+                float(payload.get("quantidade_disponivel_estimativa") or 0),
+                payload.get("url", ""),
+                payload.get("aderencia", "indefinida"),
+                payload.get("observacoes", ""),
+                now_iso(),
+            ),
+        )
+        conn.execute(
+            "UPDATE processos SET updated_at = ? WHERE id = ?",
+            (now_iso(), int(payload["processo_id"])),
+        )
+        return int(cur.lastrowid)
+
+
+def list_atas(processo_id: int, db_path: Path | str = DB_PATH) -> list[dict[str, Any]]:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM atas
+            WHERE processo_id = ?
+            ORDER BY vigencia_fim DESC, aderencia ASC, id DESC
+            """,
+            (processo_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def delete_ata(ata_id: int, db_path: Path | str = DB_PATH) -> bool:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT processo_id FROM atas WHERE id = ?",
+            (ata_id,),
+        ).fetchone()
+        cur = conn.execute("DELETE FROM atas WHERE id = ?", (ata_id,))
+        if row:
+            conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (now_iso(), row["processo_id"]))
+        return cur.rowcount > 0
+
+
+def resumo_atas(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str, int]:
+    hoje = datetime.now().date().isoformat()
+    atas = list_atas(processo_id, db_path)
+    vigentes = [
+        ata
+        for ata in atas
+        if not ata.get("vigencia_fim") or str(ata["vigencia_fim"]) >= hoje
+    ]
+    aderentes = [
+        ata
+        for ata in vigentes
+        if ata.get("aderencia") in {"alta", "media"}
+    ]
+    return {
+        "atas_total": len(atas),
+        "atas_vigentes": len(vigentes),
+        "atas_potencialmente_aderentes": len(aderentes),
+    }
+
+
 def resumo_pesquisa(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str, Any]:
     fontes = list_fontes(processo_id, db_path)
     valores = [
@@ -227,7 +310,8 @@ def export_snapshot(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str
     return {
         "processo": processo,
         "fontes": list_fontes(processo_id, db_path),
+        "atas": list_atas(processo_id, db_path),
         "resumo": resumo_pesquisa(processo_id, db_path),
+        "resumo_atas": resumo_atas(processo_id, db_path),
         "gerado_em": now_iso(),
     }
-

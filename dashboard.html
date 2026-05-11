@@ -335,6 +335,18 @@
         .badge.green { background: var(--green-soft); color: var(--green); }
         .badge.amber { background: var(--amber-soft); color: var(--amber); }
 
+        #atasSection .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #atasResumoBadge {
+            min-height: auto;
+            padding: 8px 10px;
+            line-height: 1.2;
+            white-space: normal;
+            text-align: center;
+        }
+
         @media (max-width: 1100px) {
             .app, .grid { grid-template-columns: 1fr; }
         }
@@ -355,9 +367,9 @@
                 <span>Processos preparatorios de licitacao</span>
             </div>
             <nav>
-                <button class="nav-item active">Pesquisa de precos</button>
-                <button class="nav-item">Atas para carona</button>
-                <button class="nav-item">Relatorios</button>
+                <button class="nav-item active" onclick="scrollToSection('pesquisaSection')">Pesquisa de precos</button>
+                <button class="nav-item" onclick="scrollToSection('atasSection')">Atas para carona</button>
+                <button class="nav-item" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
             </nav>
             <div class="note">
                 MVP local para organizar objeto, fontes de preco, descartes e memoria de calculo.
@@ -383,7 +395,7 @@
                 <article class="metric"><span>Descartes</span><strong id="m-descartes">0</strong><small>Fontes nao aproveitadas.</small></article>
             </section>
 
-            <section class="grid">
+            <section class="grid" id="pesquisaSection">
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -546,6 +558,124 @@
                     </div>
                 </div>
             </section>
+
+            <section class="grid" id="atasSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Ata de registro de precos</span>
+                            <h3>Registrar possibilidade de carona</h3>
+                        </div>
+                        <span class="badge" id="atasResumoBadge">0 atas</span>
+                    </div>
+                    <div class="panel-body">
+                        <form id="ataForm" onsubmit="criarAta(event)">
+                            <div class="form-grid">
+                                <label>
+                                    <span>Numero da ata</span>
+                                    <input id="ataNumero" placeholder="ex: ARP 12/2026">
+                                </label>
+                                <label>
+                                    <span>Aderencia</span>
+                                    <select id="ataAderencia">
+                                        <option value="indefinida">Indefinida</option>
+                                        <option value="alta">Alta</option>
+                                        <option value="media">Media</option>
+                                        <option value="baixa">Baixa</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Orgao gerenciador</span>
+                                    <input id="ataOrgao">
+                                </label>
+                                <label>
+                                    <span>Fornecedor</span>
+                                    <input id="ataFornecedor">
+                                </label>
+                                <label class="wide">
+                                    <span>Objeto da ata</span>
+                                    <textarea id="ataObjeto" required></textarea>
+                                </label>
+                                <label class="wide">
+                                    <span>Item aderente</span>
+                                    <textarea id="ataItem"></textarea>
+                                </label>
+                                <label>
+                                    <span>Valor unitario</span>
+                                    <input id="ataValorUnitario" type="number" min="0" step="0.01" value="0">
+                                </label>
+                                <label>
+                                    <span>Quantidade registrada</span>
+                                    <input id="ataQuantidadeRegistrada" type="number" min="0" step="1" value="0">
+                                </label>
+                                <label>
+                                    <span>Estimativa disponivel</span>
+                                    <input id="ataQuantidadeDisponivel" type="number" min="0" step="1" value="0">
+                                </label>
+                                <label>
+                                    <span>Vigencia inicio</span>
+                                    <input id="ataVigenciaInicio" placeholder="ex: 2026-01-01">
+                                </label>
+                                <label>
+                                    <span>Vigencia fim</span>
+                                    <input id="ataVigenciaFim" placeholder="ex: 2026-12-31">
+                                </label>
+                                <label class="wide">
+                                    <span>URL da ata</span>
+                                    <input id="ataUrl">
+                                </label>
+                                <label class="wide">
+                                    <span>Observacoes e checklist inicial</span>
+                                    <textarea id="ataObservacoes" placeholder="Registre vigencia, anuencia, saldo, compatibilidade do objeto e justificativas pendentes"></textarea>
+                                </label>
+                            </div>
+                            <div class="actions">
+                                <button class="primary" type="submit">Adicionar ata</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Atas e caronas</span>
+                            <h3>Analise inicial</h3>
+                        </div>
+                        <button onclick="carregarProcessoSelecionado()">Atualizar</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Aderencia</th>
+                                    <th>Ata</th>
+                                    <th>Objeto / item</th>
+                                    <th>Valor</th>
+                                    <th>Vigencia</th>
+                                    <th>Acao</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaAtas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="relatoriosSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Relatorios</span>
+                            <h3>Exportacoes do processo</h3>
+                        </div>
+                        <button onclick="exportarXlsx()">Exportar XLSX</button>
+                    </div>
+                    <div class="panel-body">
+                        <p class="lead">O XLSX consolida processo, fontes de preco, resumo estatistico e atas registradas para a instrucao administrativa.</p>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -556,6 +686,10 @@
 
         function setStatus(message) {
             document.getElementById('status').textContent = message;
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         async function api(url, options = {}) {
@@ -629,13 +763,17 @@
             if (!processoSelecionado) {
                 document.getElementById('processoSelecionadoBadge').textContent = 'Nenhum processo';
                 document.getElementById('tabelaFontes').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
+                document.getElementById('atasResumoBadge').textContent = '0 atas';
+                document.getElementById('tabelaAtas').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
                 return;
             }
             const res = await api(`/processos/${processoSelecionado}`);
             const data = await res.json();
             document.getElementById('processoSelecionadoBadge').textContent = `#${data.processo.id} ${data.processo.titulo}`;
             atualizarResumo(data.resumo);
+            atualizarResumoAtas(data.resumo_atas);
             renderFontes(data.fontes);
+            renderAtas(data.atas);
         }
 
         function atualizarResumo(resumo) {
@@ -644,6 +782,13 @@
             document.getElementById('m-mediana').textContent = resumo.preco_estimado_mediana
                 ? fmtMoney.format(resumo.preco_estimado_mediana)
                 : 'R$ 0';
+        }
+
+        function atualizarResumoAtas(resumo) {
+            const total = resumo?.atas_total || 0;
+            const vigentes = resumo?.atas_vigentes || 0;
+            const aderentes = resumo?.atas_potencialmente_aderentes || 0;
+            document.getElementById('atasResumoBadge').textContent = `${total} atas | ${vigentes} vigentes | ${aderentes} aderentes`;
         }
 
         function renderFontes(fontes) {
@@ -662,6 +807,28 @@
                     <td>${fmtMoney.format(Number(item.valor_unitario || 0))}</td>
                     <td>${item.orgao || '-'}</td>
                     <td><button class="danger" onclick="excluirFonte(${item.id})">Excluir</button></td>
+                `;
+                tabela.appendChild(row);
+            });
+        }
+
+        function renderAtas(atas) {
+            const tabela = document.getElementById('tabelaAtas');
+            tabela.innerHTML = '';
+            if (!atas.length) {
+                tabela.innerHTML = '<tr><td colspan="6">Nenhuma ata registrada para este processo.</td></tr>';
+                return;
+            }
+            atas.forEach(item => {
+                const row = document.createElement('tr');
+                const aderenciaClass = item.aderencia === 'alta' || item.aderencia === 'media' ? 'green' : item.aderencia === 'baixa' ? 'amber' : '';
+                row.innerHTML = `
+                    <td><span class="badge ${aderenciaClass}">${item.aderencia || 'indefinida'}</span></td>
+                    <td><strong>${item.numero || '-'}</strong><br><small>${item.orgao_gerenciador || '-'}</small></td>
+                    <td>${item.objeto || '-'}<br><small>${item.item || ''}</small></td>
+                    <td>${fmtMoney.format(Number(item.valor_unitario || 0))}</td>
+                    <td>${item.vigencia_inicio || '-'} a ${item.vigencia_fim || '-'}</td>
+                    <td><button class="danger" onclick="excluirAta(${item.id})">Excluir</button></td>
                 `;
                 tabela.appendChild(row);
             });
@@ -704,11 +871,56 @@
             setStatus('Fonte adicionada');
         }
 
+        async function criarAta(event) {
+            event.preventDefault();
+            if (!processoSelecionado) {
+                setStatus('Crie ou selecione um processo primeiro');
+                return;
+            }
+            const payload = {
+                processo_id: processoSelecionado,
+                numero: document.getElementById('ataNumero').value.trim(),
+                orgao_gerenciador: document.getElementById('ataOrgao').value.trim(),
+                fornecedor: document.getElementById('ataFornecedor').value.trim(),
+                objeto: document.getElementById('ataObjeto').value.trim(),
+                item: document.getElementById('ataItem').value.trim(),
+                valor_unitario: Number(document.getElementById('ataValorUnitario').value || 0),
+                vigencia_inicio: document.getElementById('ataVigenciaInicio').value.trim(),
+                vigencia_fim: document.getElementById('ataVigenciaFim').value.trim(),
+                quantidade_registrada: Number(document.getElementById('ataQuantidadeRegistrada').value || 0),
+                quantidade_disponivel_estimativa: Number(document.getElementById('ataQuantidadeDisponivel').value || 0),
+                url: document.getElementById('ataUrl').value.trim(),
+                aderencia: document.getElementById('ataAderencia').value,
+                observacoes: document.getElementById('ataObservacoes').value.trim()
+            };
+            setStatus('Adicionando ata...');
+            await api('/atas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('ataForm').reset();
+            document.getElementById('ataAderencia').value = 'indefinida';
+            document.getElementById('ataValorUnitario').value = 0;
+            document.getElementById('ataQuantidadeRegistrada').value = 0;
+            document.getElementById('ataQuantidadeDisponivel').value = 0;
+            await carregarProcessoSelecionado();
+            await carregarProcessos();
+            setStatus('Ata adicionada');
+        }
+
         async function excluirFonte(id) {
             if (!confirm('Excluir esta fonte de preco?')) return;
             await api(`/fontes/${id}`, { method: 'DELETE' });
             await carregarProcessoSelecionado();
             setStatus('Fonte excluida');
+        }
+
+        async function excluirAta(id) {
+            if (!confirm('Excluir esta ata?')) return;
+            await api(`/atas/${id}`, { method: 'DELETE' });
+            await carregarProcessoSelecionado();
+            setStatus('Ata excluida');
         }
 
         function exportarXlsx() {
