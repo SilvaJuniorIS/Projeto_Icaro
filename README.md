@@ -1,4 +1,4 @@
-# Projeto Icaro
+# Icaro
 
 Ferramenta de apoio administrativo para a fase preparatoria de licitacoes.
 
@@ -70,7 +70,7 @@ http://127.0.0.1:8100
 ## Estrutura
 
 ```text
-Projeto_Icaro/
+Icaro/
   config/
   data/
   docs/

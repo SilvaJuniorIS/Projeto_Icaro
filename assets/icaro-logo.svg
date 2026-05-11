@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Icaro</title>
+  <desc id="desc">Marca Icaro com pena estilizada azul, verde e dourada.</desc>
+  <defs>
+    <linearGradient id="blue" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0058c8"/>
+      <stop offset="0.45" stop-color="#00d9f1"/>
+      <stop offset="1" stop-color="#0b7edb"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" x2="1">
+      <stop offset="0" stop-color="#ffb600"/>
+      <stop offset="0.5" stop-color="#fff35f"/>
+      <stop offset="1" stop-color="#d89a00"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" x2="1">
+      <stop offset="0" stop-color="#00a86b"/>
+      <stop offset="0.5" stop-color="#9cea45"/>
+      <stop offset="1" stop-color="#008854"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0.72  0 0 0 0 1  0 0 0 .45 0"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path d="M148 275 C300 246 533 167 770 36 C728 137 602 200 413 246 C296 274 211 286 148 275Z" fill="url(#blue)" stroke="#004c97" stroke-width="4"/>
+    <path d="M196 307 C377 290 575 221 743 88 C700 170 573 259 341 318 C274 335 224 331 196 307Z" fill="#dffbff" opacity=".78" stroke="#0077bc" stroke-width="3"/>
+    <path d="M250 344 C412 328 589 266 725 143 C684 225 557 314 286 374 C270 365 258 355 250 344Z" fill="url(#blue)" stroke="#004c97" stroke-width="4"/>
+    <path d="M83 413 C257 391 450 337 647 257 C536 354 347 413 83 413Z" fill="url(#gold)" stroke="#d29600" stroke-width="4"/>
+    <path d="M166 432 C355 407 529 351 677 260 C548 383 385 436 166 432Z" fill="url(#green)" stroke="#08713f" stroke-width="4"/>
+    <path d="M336 374 C422 300 540 219 721 103" fill="none" stroke="#013b78" stroke-width="9" stroke-linecap="round"/>
+    <path d="M344 367 C437 297 558 219 724 98" fill="none" stroke="#76f3ff" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="450" y="462" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="92" font-weight="700" letter-spacing="10" fill="#24cbe8" stroke="#005aa8" stroke-width="3">ICARO</text>
+  <path d="M164 488 C346 459 531 458 742 486" fill="none" stroke="url(#gold)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M178 499 C356 474 525 471 724 495" fill="none" stroke="#00d4ef" stroke-width="5" stroke-linecap="round"/>
+</svg>

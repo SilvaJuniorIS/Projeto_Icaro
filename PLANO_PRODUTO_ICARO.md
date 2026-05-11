@@ -1,4 +1,4 @@
-# Plano de produto - Projeto Icaro
+# Plano de produto - Icaro
 
 ## Proposta
 
@@ -113,4 +113,3 @@ Saidas:
 ## Nome e identidade
 
 Icaro sugere voo, planejamento e visao ampla. A identidade deve ser administrativa, clara e confiavel, menos comercial que o Hermes.
-

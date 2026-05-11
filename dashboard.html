@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Projeto Icaro</title>
+    <title>Icaro</title>
     <style>
         :root {
             color-scheme: light;
@@ -48,6 +48,18 @@
             display: flex;
             flex-direction: column;
             gap: 22px;
+        }
+
+        .brand {
+            display: grid;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 168px;
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
 
         .brand h1 {
@@ -338,6 +350,7 @@
     <div class="app">
         <aside>
             <div class="brand">
+                <img class="brand-logo" src="/assets/icaro-logo.svg" alt="Icaro">
                 <h1>Icaro</h1>
                 <span>Processos preparatorios de licitacao</span>
             </div>
@@ -354,7 +367,7 @@
         <main>
             <section class="topbar">
                 <div>
-                    <p class="eyebrow">Projeto Icaro</p>
+                    <p class="eyebrow">Icaro</p>
                     <h2>Pesquisa de precos preparatoria</h2>
                     <p class="lead">
                         Cadastre o objeto, lance fontes de preco e acompanhe a memoria de calculo inicial para instruir processos licitatorios.
@@ -511,7 +524,10 @@
                             <span>Memoria</span>
                             <h3>Fontes e calculo</h3>
                         </div>
-                        <button onclick="carregarProcessoSelecionado()">Recalcular</button>
+                        <div class="actions">
+                            <button onclick="carregarProcessoSelecionado()">Recalcular</button>
+                            <button onclick="exportarXlsx()">Exportar XLSX</button>
+                        </div>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -695,10 +711,18 @@
             setStatus('Fonte excluida');
         }
 
+        function exportarXlsx() {
+            if (!processoSelecionado) {
+                setStatus('Selecione um processo para exportar');
+                return;
+            }
+            window.location.href = `/processos/${processoSelecionado}/export/xlsx`;
+            setStatus('Exportacao XLSX iniciada');
+        }
+
         carregarProcessos()
             .then(carregarProcessoSelecionado)
             .catch(err => setStatus(`Erro: ${err.message}`));
     </script>
 </body>
 </html>
-

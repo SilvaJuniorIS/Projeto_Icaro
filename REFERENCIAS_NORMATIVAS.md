@@ -1,6 +1,6 @@
 # Referencias normativas iniciais
 
-Este documento registra a base normativa inicial do Projeto Icaro. Ele nao substitui parecer juridico nem a regulamentacao especifica do ente contratante.
+Este documento registra a base normativa inicial do Icaro. Ele nao substitui parecer juridico nem a regulamentacao especifica do ente contratante.
 
 ## Lei nº 14.133/2021
 
@@ -49,4 +49,3 @@ Pontos centrais para o Icaro:
 3. O sistema deve explicar o metodo de calculo adotado.
 4. O sistema deve registrar por que uma fonte foi aceita ou descartada.
 5. A ferramenta deve apoiar a decisao administrativa, nao substituir a analise juridica, tecnica ou de controle interno.
-

@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from src.config import BASE_DIR
 from src.db import (
     create_fonte,
     create_processo,
@@ -17,9 +19,11 @@ from src.db import (
     list_processos,
     resumo_pesquisa,
 )
+from src.reports import gerar_xlsx_processo
 
 
-app = FastAPI(title="Projeto Icaro")
+app = FastAPI(title="Icaro")
+app.mount("/assets", StaticFiles(directory=BASE_DIR / "assets"), name="assets")
 
 
 class ProcessoRequest(BaseModel):
@@ -125,3 +129,14 @@ def snapshot(processo_id: int) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Processo nao encontrado")
     return data
 
+
+@app.get("/processos/{processo_id}/export/xlsx")
+def exportar_xlsx(processo_id: int) -> FileResponse:
+    path = gerar_xlsx_processo(processo_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return FileResponse(
+        path,
+        filename=path.name,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )

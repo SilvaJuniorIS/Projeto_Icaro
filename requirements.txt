@@ -4,4 +4,4 @@ pydantic
 requests
 pandas
 openpyxl
-
+httpx
