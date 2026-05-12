@@ -1,33 +1,39 @@
 # Icaro
 
-Ferramenta de apoio administrativo para a fase preparatoria de licitacoes.
+Ferramenta de apoio administrativo para pesquisa de mercado e formacao de cesta de precos a partir de itens informados pelo usuario.
 
-O Icaro nasce como projeto paralelo ao Hermes. Enquanto o Hermes olha para oportunidades comerciais, o Icaro olha para o lado da Administracao: formacao do processo, pesquisa de precos, busca de atas ativas para possivel adesao e organizacao da evidencia documental.
+O Icaro organiza uma pesquisa de precos por itens. O usuario informa uma lista de itens individualmente ou por importacao de linhas, e o sistema apoia a busca de valores praticados em contratacoes publicas, especialmente no PNCP, preservando origem, fonte, valor e memoria de calculo.
 
 ## Objetivo
 
-Apoiar equipes de compras, planejamento e licitacoes na elaboracao de processos preparatorios com maior rastreabilidade, padronizacao e seguranca tecnica.
+Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa de mercado com maior rastreabilidade por item, padronizacao das fontes e relatorio administrativo de precos praticados.
 
 ## Modulos previstos
 
-1. **Pesquisa de precos**
+1. **Cesta de itens**
+   - Cadastro individual de itens.
+   - Importacao simples por linhas no formato `codigo;descricao;unidade;quantidade;categoria`.
+   - Termo de busca por item para consulta no PNCP.
+
+2. **Pesquisa de precos**
    - Busca de licitacoes e contratacoes similares no PNCP.
+   - Vinculo de fontes a cada item da cesta.
    - Agrupamento por item, unidade, quantidade e localidade.
    - Memoria de calculo com media, mediana e tratamento de valores extremos.
    - Registro das fontes consultadas e justificativas.
 
-2. **Atas e caronas**
+3. **Atas e caronas**
    - Busca de atas de registro de precos vigentes.
    - Verificacao inicial de aderencia do objeto.
    - Controle de vigencia, fornecedor, orgao gerenciador e quantitativos.
    - Checklist para adesao, conforme regras aplicaveis.
 
-3. **Processo preparatorio**
+4. **Processo preparatorio**
    - Checklist de documentos.
    - Minutas e modelos de justificativa.
    - Organizacao do estudo tecnico preliminar, termo de referencia e pesquisa de mercado.
 
-4. **Relatorio administrativo**
+5. **Relatorio administrativo**
    - Relatorio de pesquisa de precos.
    - Quadro comparativo.
    - Justificativa da metodologia.
@@ -42,7 +48,7 @@ Apoiar equipes de compras, planejamento e licitacoes na elaboracao de processos 
 
 ## Estado atual
 
-MVP local inicial. Ja existem API FastAPI, banco SQLite, cadastro de processos, lancamento manual de fontes de preco, calculo de media/mediana e dashboard operacional.
+MVP local inicial. Ja existem API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, consulta inicial ao PNCP e exportacoes MD/HTML/DOCX/XLSX.
 
 ## Como executar
 

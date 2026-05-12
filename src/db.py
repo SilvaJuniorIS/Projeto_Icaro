@@ -46,9 +46,27 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
             )
         """)
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS pesquisa_itens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                processo_id INTEGER NOT NULL,
+                codigo TEXT,
+                descricao TEXT NOT NULL,
+                unidade TEXT,
+                quantidade REAL DEFAULT 1,
+                categoria TEXT,
+                termo_busca TEXT,
+                especificacao TEXT,
+                status TEXT DEFAULT 'pendente',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(processo_id) REFERENCES processos(id)
+            )
+        """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS fontes_preco (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 processo_id INTEGER NOT NULL,
+                item_id INTEGER,
                 fonte_tipo TEXT NOT NULL,
                 descricao_item TEXT NOT NULL,
                 valor_unitario REAL NOT NULL,
@@ -64,9 +82,16 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
                 justificativa_descarte TEXT,
                 observacoes TEXT,
                 created_at TEXT NOT NULL,
-                FOREIGN KEY(processo_id) REFERENCES processos(id)
+                FOREIGN KEY(processo_id) REFERENCES processos(id),
+                FOREIGN KEY(item_id) REFERENCES pesquisa_itens(id)
             )
         """)
+        columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(fontes_preco)").fetchall()
+        }
+        if "item_id" not in columns:
+            conn.execute("ALTER TABLE fontes_preco ADD COLUMN item_id INTEGER")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS atas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,19 +163,91 @@ def get_processo(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str, A
     return dict(row) if row else None
 
 
+def create_item(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> int:
+    init_db(db_path)
+    timestamp = now_iso()
+    with connect(db_path) as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO pesquisa_itens (
+                processo_id, codigo, descricao, unidade, quantidade, categoria,
+                termo_busca, especificacao, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                int(payload["processo_id"]),
+                payload.get("codigo", ""),
+                payload["descricao"],
+                payload.get("unidade", ""),
+                float(payload.get("quantidade") or 1),
+                payload.get("categoria", ""),
+                payload.get("termo_busca") or payload["descricao"],
+                payload.get("especificacao", ""),
+                payload.get("status", "pendente"),
+                timestamp,
+                timestamp,
+            ),
+        )
+        conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (timestamp, int(payload["processo_id"])))
+        return int(cur.lastrowid)
+
+
+def create_itens(processo_id: int, itens: list[dict[str, Any]], db_path: Path | str = DB_PATH) -> list[int]:
+    ids = []
+    for item in itens:
+        payload = dict(item)
+        payload["processo_id"] = processo_id
+        ids.append(create_item(payload, db_path))
+    return ids
+
+
+def list_itens(processo_id: int, db_path: Path | str = DB_PATH) -> list[dict[str, Any]]:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM pesquisa_itens
+            WHERE processo_id = ?
+            ORDER BY id ASC
+            """,
+            (processo_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_item(item_id: int, db_path: Path | str = DB_PATH) -> dict[str, Any] | None:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        row = conn.execute("SELECT * FROM pesquisa_itens WHERE id = ?", (item_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def delete_item(item_id: int, db_path: Path | str = DB_PATH) -> bool:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        row = conn.execute("SELECT processo_id FROM pesquisa_itens WHERE id = ?", (item_id,)).fetchone()
+        conn.execute("UPDATE fontes_preco SET item_id = NULL WHERE item_id = ?", (item_id,))
+        cur = conn.execute("DELETE FROM pesquisa_itens WHERE id = ?", (item_id,))
+        if row:
+            conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (now_iso(), row["processo_id"]))
+        return cur.rowcount > 0
+
+
 def create_fonte(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> int:
     init_db(db_path)
     with connect(db_path) as conn:
         cur = conn.execute(
             """
             INSERT INTO fontes_preco (
-                processo_id, fonte_tipo, descricao_item, valor_unitario, quantidade,
+                processo_id, item_id, fonte_tipo, descricao_item, valor_unitario, quantidade,
                 orgao, fornecedor, uf, municipio, url, data_referencia, data_acesso,
                 aproveitada, justificativa_descarte, observacoes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 int(payload["processo_id"]),
+                int(payload["item_id"]) if payload.get("item_id") else None,
                 payload["fonte_tipo"],
                 payload["descricao_item"],
                 float(payload["valor_unitario"]),
@@ -186,6 +283,21 @@ def list_fontes(processo_id: int, db_path: Path | str = DB_PATH) -> list[dict[st
             ORDER BY aproveitada DESC, valor_unitario ASC, id DESC
             """,
             (processo_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def list_fontes_item(item_id: int, db_path: Path | str = DB_PATH) -> list[dict[str, Any]]:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM fontes_preco
+            WHERE item_id = ?
+            ORDER BY aproveitada DESC, valor_unitario ASC, id DESC
+            """,
+            (item_id,),
         ).fetchall()
     return [dict(row) for row in rows]
 
@@ -303,12 +415,41 @@ def resumo_pesquisa(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str
     return resumo
 
 
+def resumo_item(item_id: int, db_path: Path | str = DB_PATH) -> dict[str, Any]:
+    fontes = list_fontes_item(item_id, db_path)
+    valores = [
+        float(item["valor_unitario"])
+        for item in fontes
+        if item.get("aproveitada") and float(item.get("valor_unitario") or 0) > 0
+    ]
+    resumo = calcular_resumo_precos(valores)
+    resumo["preco_estimado_mediana"] = sugerir_preco_estimado(valores, "mediana")
+    resumo["preco_estimado_media"] = sugerir_preco_estimado(valores, "media")
+    resumo["fontes_total"] = len(fontes)
+    resumo["fontes_aproveitadas"] = len(valores)
+    resumo["fontes_descartadas"] = max(0, len(fontes) - len(valores))
+    return resumo
+
+
+def resumo_itens(processo_id: int, db_path: Path | str = DB_PATH) -> list[dict[str, Any]]:
+    itens = list_itens(processo_id, db_path)
+    return [
+        {
+            "item": item,
+            "resumo": resumo_item(int(item["id"]), db_path),
+        }
+        for item in itens
+    ]
+
+
 def export_snapshot(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str, Any]:
     processo = get_processo(processo_id, db_path)
     if not processo:
         return {}
     return {
         "processo": processo,
+        "itens": list_itens(processo_id, db_path),
+        "resumo_itens": resumo_itens(processo_id, db_path),
         "fontes": list_fontes(processo_id, db_path),
         "atas": list_atas(processo_id, db_path),
         "resumo": resumo_pesquisa(processo_id, db_path),

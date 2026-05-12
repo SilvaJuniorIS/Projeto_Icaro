@@ -5,6 +5,8 @@ from typing import Any
 
 def gerar_checklist(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
     processo = snapshot.get("processo", {})
+    itens = snapshot.get("itens", [])
+    resumo_itens = snapshot.get("resumo_itens", [])
     fontes = snapshot.get("fontes", [])
     atas = snapshot.get("atas", [])
     resumo = snapshot.get("resumo", {})
@@ -26,6 +28,20 @@ def gerar_checklist(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
             "detalhe": "Registre a equipe ou servidor responsavel pela pesquisa.",
         },
         {
+            "id": "itens_registrados",
+            "grupo": "Cesta de itens",
+            "titulo": "Itens da cesta registrados",
+            "ok": len(itens) > 0,
+            "detalhe": f"{len(itens)} item(ns) registrado(s).",
+        },
+        {
+            "id": "itens_com_fontes",
+            "grupo": "Cesta de itens",
+            "titulo": "Itens com fontes vinculadas",
+            "ok": bool(itens) and all(int(entry["resumo"].get("fontes_aproveitadas") or 0) > 0 for entry in resumo_itens),
+            "detalhe": "Cada item deve ter ao menos uma fonte de preco aproveitada.",
+        },
+        {
             "id": "fontes_registradas",
             "grupo": "Pesquisa de precos",
             "titulo": "Fontes de preco registradas",
@@ -35,9 +51,9 @@ def gerar_checklist(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "id": "minimo_tres_fontes",
             "grupo": "Pesquisa de precos",
-            "titulo": "Minimo de tres fontes aproveitadas",
-            "ok": int(resumo.get("fontes_aproveitadas") or 0) >= 3,
-            "detalhe": f"{resumo.get('fontes_aproveitadas', 0)} fonte(s) aproveitada(s).",
+            "titulo": "Minimo de tres fontes por item",
+            "ok": bool(itens) and all(int(entry["resumo"].get("fontes_aproveitadas") or 0) >= 3 for entry in resumo_itens),
+            "detalhe": "A referencia ideal e ter ao menos tres fontes aproveitadas para cada item.",
         },
         {
             "id": "descartes_justificados",

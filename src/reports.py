@@ -57,13 +57,15 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     processo: dict[str, Any] = snapshot["processo"]
     resumo: dict[str, Any] = snapshot["resumo"]
     resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
+    itens: list[dict[str, Any]] = snapshot.get("itens", [])
+    resumo_itens: list[dict[str, Any]] = snapshot.get("resumo_itens", [])
     fontes: list[dict[str, Any]] = snapshot["fontes"]
     atas: list[dict[str, Any]] = snapshot["atas"]
     checklist = gerar_checklist(snapshot)
     comparabilidade = avaliar_comparabilidade(snapshot)
 
     linhas = [
-        f"# Relatorio administrativo - {_texto(processo.get('titulo'))}",
+        f"# Relatorio de pesquisa de mercado - {_texto(processo.get('titulo'))}",
         "",
         f"Gerado em: {snapshot['gerado_em']}",
         "",
@@ -77,24 +79,43 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
         f"- Responsavel: {_texto(processo.get('responsavel'))}",
         f"- Status: {_texto(processo.get('status'))}",
         "",
-        "## 2. Pesquisa de precos",
+        "## 2. Cesta de itens pesquisados",
         "",
-        f"- Fontes registradas: {resumo.get('fontes_total', 0)}",
-        f"- Fontes aproveitadas: {resumo.get('fontes_aproveitadas', 0)}",
-        f"- Fontes descartadas: {resumo.get('fontes_descartadas', 0)}",
-        f"- Menor valor: {_fmt_money(resumo.get('menor'))}",
-        f"- Maior valor: {_fmt_money(resumo.get('maior'))}",
-        f"- Media: {_fmt_money(resumo.get('media'))}",
-        f"- Mediana: {_fmt_money(resumo.get('mediana'))}",
-        f"- Preco estimado sugerido pela mediana: {_fmt_money(resumo.get('preco_estimado_mediana'))}",
+        "| Codigo | Item | Unidade | Quantidade | Termo de busca | Fontes aproveitadas | Mediana |",
+        "| --- | --- | --- | ---: | --- | ---: | ---: |",
+    ]
+    if resumo_itens:
+        for item_resumo in resumo_itens:
+            item = item_resumo["item"]
+            item_res = item_resumo["resumo"]
+            linhas.append(
+                f"| {_texto(item.get('codigo'))} | {_texto(item.get('descricao'))} | {_texto(item.get('unidade'))} | {_texto(item.get('quantidade'))} | {_texto(item.get('termo_busca'))} | {item_res.get('fontes_aproveitadas', 0)} | {_fmt_money(item_res.get('preco_estimado_mediana'))} |"
+            )
+    else:
+        linhas.append("| - | Nenhum item cadastrado | - | - | - | - | - |")
+
+    linhas.extend(
+        [
+            "",
+            "## 3. Pesquisa de precos consolidada",
+            "",
+            f"- Fontes registradas: {resumo.get('fontes_total', 0)}",
+            f"- Fontes aproveitadas: {resumo.get('fontes_aproveitadas', 0)}",
+            f"- Fontes descartadas: {resumo.get('fontes_descartadas', 0)}",
+            f"- Menor valor: {_fmt_money(resumo.get('menor'))}",
+            f"- Maior valor: {_fmt_money(resumo.get('maior'))}",
+            f"- Media: {_fmt_money(resumo.get('media'))}",
+            f"- Mediana: {_fmt_money(resumo.get('mediana'))}",
+            f"- Preco estimado sugerido pela mediana: {_fmt_money(resumo.get('preco_estimado_mediana'))}",
             f"- Outliers identificados pelo criterio IQR: {resumo.get('outliers', 0)}",
             f"- Fontes com comparabilidade alta: {sum(1 for item in comparabilidade['itens'] if item['classificacao'] == 'alta')}",
             "",
             "### Fontes consultadas",
-        "",
-        "| Uso | Tipo | Item | Valor unitario | Orgao | Fornecedor | Justificativa/observacoes |",
-        "| --- | --- | --- | ---: | --- | --- | --- |",
-    ]
+            "",
+            "| Uso | Tipo | Item | Valor unitario | Orgao | Fornecedor | Justificativa/observacoes |",
+            "| --- | --- | --- | ---: | --- | --- | --- |",
+        ]
+    )
 
     if fontes:
         for fonte in fontes:
@@ -121,7 +142,7 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     linhas.extend(
         [
             "",
-            "## 3. Atas para possivel adesao",
+            "## 4. Atas para possivel adesao",
             "",
             f"- Atas registradas: {resumo_atas.get('atas_total', 0)}",
             f"- Atas vigentes ou sem data final informada: {resumo_atas.get('atas_vigentes', 0)}",
@@ -156,7 +177,7 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     linhas.extend(
         [
             "",
-            "## 4. Checklist administrativo inicial",
+            "## 5. Checklist administrativo inicial",
             "",
         ]
     )
@@ -166,7 +187,7 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     linhas.extend(
         [
             "",
-            "## 5. Comparabilidade",
+            "## 6. Comparabilidade",
             "",
             "| Fonte | Classificacao | Score | Similaridade | Desvio da mediana |",
             "| --- | --- | ---: | ---: | ---: |",
@@ -184,7 +205,7 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     linhas.extend(
         [
             "",
-            "## 6. Observacao",
+            "## 7. Observacao",
             "",
             "Este relatorio apoia a instrucao administrativa e nao substitui a analise tecnica, juridica ou de controle interno.",
             "",
@@ -337,6 +358,8 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
     processo: dict[str, Any] = snapshot["processo"]
     resumo: dict[str, Any] = snapshot["resumo"]
     resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
+    itens: list[dict[str, Any]] = snapshot.get("itens", [])
+    resumo_itens: list[dict[str, Any]] = snapshot.get("resumo_itens", [])
     fontes: list[dict[str, Any]] = snapshot["fontes"]
     atas: list[dict[str, Any]] = snapshot["atas"]
     checklist = gerar_checklist(snapshot)
@@ -376,9 +399,45 @@ def gerar_xlsx_processo(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -
     _style_header(ws_proc)
     _auto_width(ws_proc)
 
+    ws_itens = wb.create_sheet("Itens")
+    ws_itens.append([
+        "id",
+        "codigo",
+        "descricao",
+        "unidade",
+        "quantidade",
+        "categoria",
+        "termo_busca",
+        "fontes_aproveitadas",
+        "mediana",
+        "media",
+        "menor",
+        "maior",
+    ])
+    resumo_por_item = {int(item["item"]["id"]): item["resumo"] for item in resumo_itens}
+    for item in itens:
+        item_resumo = resumo_por_item.get(int(item["id"]), {})
+        ws_itens.append([
+            item.get("id"),
+            item.get("codigo"),
+            item.get("descricao"),
+            item.get("unidade"),
+            item.get("quantidade"),
+            item.get("categoria"),
+            item.get("termo_busca"),
+            item_resumo.get("fontes_aproveitadas"),
+            item_resumo.get("preco_estimado_mediana"),
+            item_resumo.get("preco_estimado_media"),
+            item_resumo.get("menor"),
+            item_resumo.get("maior"),
+        ])
+    _style_header(ws_itens)
+    _auto_width(ws_itens)
+
     ws_fontes = wb.create_sheet("Fontes")
     headers = [
         "id",
+        "item_id",
         "fonte_tipo",
         "descricao_item",
         "valor_unitario",

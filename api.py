@@ -13,16 +13,24 @@ from src.comparability import avaliar_comparabilidade
 from src.db import (
     create_ata,
     create_fonte,
+    create_item,
+    create_itens,
     create_processo,
     delete_ata,
     delete_fonte,
+    delete_item,
     export_snapshot,
+    get_item,
     get_processo,
     init_db,
     list_atas,
     list_fontes,
+    list_fontes_item,
+    list_itens,
     list_processos,
     resumo_atas,
+    resumo_item,
+    resumo_itens,
     resumo_pesquisa,
 )
 from src.pncp import buscar_contratacoes
@@ -47,6 +55,7 @@ class ProcessoRequest(BaseModel):
 
 class FontePrecoRequest(BaseModel):
     processo_id: int
+    item_id: int | None = None
     fonte_tipo: str = "pncp"
     descricao_item: str
     valor_unitario: float = Field(gt=0)
@@ -88,6 +97,34 @@ class PncpBuscaRequest(BaseModel):
     tamanho_pagina: int = 10
 
 
+class ItemPesquisaRequest(BaseModel):
+    processo_id: int
+    codigo: str = ""
+    descricao: str
+    unidade: str = ""
+    quantidade: float = 1
+    categoria: str = ""
+    termo_busca: str = ""
+    especificacao: str = ""
+    status: str = "pendente"
+
+
+class ItemImportInput(BaseModel):
+    codigo: str = ""
+    descricao: str
+    unidade: str = ""
+    quantidade: float = 1
+    categoria: str = ""
+    termo_busca: str = ""
+    especificacao: str = ""
+    status: str = "pendente"
+
+
+class ItensImportRequest(BaseModel):
+    processo_id: int
+    itens: list[ItemImportInput]
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db()
@@ -122,11 +159,58 @@ def obter_processo(processo_id: int) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Processo nao encontrado")
     return {
         "processo": processo,
+        "itens": list_itens(processo_id),
+        "resumo_itens": resumo_itens(processo_id),
         "fontes": list_fontes(processo_id),
         "atas": list_atas(processo_id),
         "resumo": resumo_pesquisa(processo_id),
         "resumo_atas": resumo_atas(processo_id),
     }
+
+
+@app.post("/itens")
+def criar_item(req: ItemPesquisaRequest) -> dict[str, Any]:
+    if not get_processo(req.processo_id):
+        raise HTTPException(status_code=404, detail="Pesquisa nao encontrada")
+    item_id = create_item(req.model_dump())
+    return {
+        "id": item_id,
+        "itens": list_itens(req.processo_id),
+        "resumo_itens": resumo_itens(req.processo_id),
+    }
+
+
+@app.post("/itens/importar")
+def importar_itens(req: ItensImportRequest) -> dict[str, Any]:
+    if not get_processo(req.processo_id):
+        raise HTTPException(status_code=404, detail="Pesquisa nao encontrada")
+    payloads = [item.model_dump() for item in req.itens]
+    ids = create_itens(req.processo_id, payloads)
+    return {
+        "ids": ids,
+        "itens": list_itens(req.processo_id),
+        "resumo_itens": resumo_itens(req.processo_id),
+    }
+
+
+@app.get("/itens/{item_id}")
+def obter_item(item_id: int) -> dict[str, Any]:
+    item = get_item(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item nao encontrado")
+    return {
+        "item": item,
+        "fontes": list_fontes_item(item_id),
+        "resumo": resumo_item(item_id),
+    }
+
+
+@app.delete("/itens/{item_id}")
+def excluir_item(item_id: int) -> dict[str, Any]:
+    deleted = delete_item(item_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Item nao encontrado")
+    return {"status": "deleted", "id": item_id}
 
 
 @app.get("/processos/{processo_id}/checklist")
@@ -151,11 +235,14 @@ def comparabilidade(processo_id: int) -> dict[str, Any]:
 def criar_fonte(req: FontePrecoRequest) -> dict[str, Any]:
     if not get_processo(req.processo_id):
         raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    if req.item_id and not get_item(req.item_id):
+        raise HTTPException(status_code=404, detail="Item nao encontrado")
     fonte_id = create_fonte(req.model_dump())
     return {
         "id": fonte_id,
         "fontes": list_fontes(req.processo_id),
         "resumo": resumo_pesquisa(req.processo_id),
+        "resumo_itens": resumo_itens(req.processo_id),
     }
 
 

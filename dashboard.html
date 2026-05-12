@@ -364,17 +364,18 @@
             <div class="brand">
                 <img class="brand-logo" src="/assets/icaro-logo.svg" alt="Icaro">
                 <h1>Icaro</h1>
-                <span>Processos preparatorios de licitacao</span>
+                <span>Pesquisa de mercado no PNCP</span>
             </div>
             <nav>
-                <button class="nav-item active" onclick="scrollToSection('pesquisaSection')">Pesquisa de precos</button>
+                <button class="nav-item active" onclick="scrollToSection('pesquisaSection')">Pesquisa</button>
+                <button class="nav-item" onclick="scrollToSection('itensSection')">Itens da cesta</button>
                 <button class="nav-item" onclick="scrollToSection('pncpSection')">Busca PNCP</button>
                 <button class="nav-item" onclick="scrollToSection('atasSection')">Atas para carona</button>
                 <button class="nav-item" onclick="scrollToSection('checklistSection')">Checklist</button>
                 <button class="nav-item" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
             </nav>
             <div class="note">
-                MVP local para organizar objeto, fontes de preco, descartes e memoria de calculo.
+                Informe uma cesta de itens, vincule fontes do PNCP e gere relatorio de pesquisa de mercado.
             </div>
         </aside>
 
@@ -382,39 +383,39 @@
             <section class="topbar">
                 <div>
                     <p class="eyebrow">Icaro</p>
-                    <h2>Pesquisa de precos preparatoria</h2>
+                    <h2>Cesta de precos por item</h2>
                     <p class="lead">
-                        Cadastre o objeto, lance fontes de preco e acompanhe a memoria de calculo inicial para instruir processos licitatorios.
+                        Cadastre ou importe itens, busque precos praticados em licitacoes existentes e consolide a origem dos valores para o relatorio de mercado.
                     </p>
                 </div>
                 <div class="status" id="status">Pronto</div>
             </section>
 
             <section class="metrics">
-                <article class="metric"><span>Processos</span><strong id="m-processos">0</strong><small>Total cadastrado.</small></article>
+                <article class="metric"><span>Pesquisas</span><strong id="m-processos">0</strong><small>Total cadastrado.</small></article>
+                <article class="metric"><span>Itens</span><strong id="m-itens">0</strong><small>Itens na cesta.</small></article>
                 <article class="metric"><span>Fontes usadas</span><strong id="m-fontes">0</strong><small>Amostras aproveitadas.</small></article>
                 <article class="metric"><span>Mediana</span><strong id="m-mediana">R$ 0</strong><small>Preco estimado sugerido.</small></article>
-                <article class="metric"><span>Descartes</span><strong id="m-descartes">0</strong><small>Fontes nao aproveitadas.</small></article>
             </section>
 
             <section class="grid" id="pesquisaSection">
                 <div class="panel">
                     <div class="panel-title">
                         <div>
-                            <span>Objeto</span>
-                            <h3>Novo processo</h3>
+                            <span>Pesquisa</span>
+                            <h3>Nova pesquisa de mercado</h3>
                         </div>
                     </div>
                     <div class="panel-body">
                         <form id="processoForm" onsubmit="criarProcesso(event)">
                             <div class="form-grid">
                                 <label class="wide">
-                                    <span>Titulo</span>
-                                    <input id="titulo" required placeholder="ex: Aquisicao de notebooks">
+                                    <span>Titulo da pesquisa</span>
+                                    <input id="titulo" required placeholder="ex: Cesta de material de escritorio">
                                 </label>
                                 <label class="wide">
-                                    <span>Descricao do objeto</span>
-                                    <textarea id="descricaoObjeto" required placeholder="Descreva o objeto com especificacoes essenciais"></textarea>
+                                    <span>Objeto geral</span>
+                                    <textarea id="descricaoObjeto" required placeholder="Descreva a finalidade da pesquisa e a familia de itens"></textarea>
                                 </label>
                                 <label>
                                     <span>Categoria</span>
@@ -438,7 +439,7 @@
                                 </label>
                             </div>
                             <div class="actions">
-                                <button class="primary" type="submit">Criar processo</button>
+                                <button class="primary" type="submit">Criar pesquisa</button>
                                 <button type="button" onclick="limparProcesso()">Limpar</button>
                             </div>
                         </form>
@@ -448,7 +449,7 @@
                 <div class="panel">
                     <div class="panel-title">
                         <div>
-                            <span>Processos</span>
+                            <span>Pesquisas</span>
                             <h3>Base atual</h3>
                         </div>
                         <button onclick="carregarProcessos()">Atualizar</button>
@@ -459,18 +460,88 @@
                 </div>
             </section>
 
+            <section class="grid" id="itensSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Itens</span>
+                            <h3>Adicionar item da cesta</h3>
+                        </div>
+                        <span class="badge" id="itemSelecionadoBadge">Nenhum item</span>
+                    </div>
+                    <div class="panel-body">
+                        <form id="itemForm" onsubmit="criarItem(event)">
+                            <div class="form-grid">
+                                <label>
+                                    <span>Codigo</span>
+                                    <input id="itemCodigo" placeholder="ex: 001">
+                                </label>
+                                <label>
+                                    <span>Unidade</span>
+                                    <input id="itemUnidade" placeholder="ex: unidade, kg, resma">
+                                </label>
+                                <label>
+                                    <span>Quantidade</span>
+                                    <input id="itemQuantidade" type="number" min="0" step="0.01" value="1">
+                                </label>
+                                <label>
+                                    <span>Categoria</span>
+                                    <input id="itemCategoria" placeholder="ex: material de consumo">
+                                </label>
+                                <label class="wide">
+                                    <span>Descricao do item</span>
+                                    <textarea id="itemDescricao" required placeholder="Descreva o item como ele deve ser pesquisado"></textarea>
+                                </label>
+                                <label class="wide">
+                                    <span>Termo de busca PNCP</span>
+                                    <input id="itemTermoBusca" placeholder="Se vazio, usa a descricao do item">
+                                </label>
+                                <label class="wide">
+                                    <span>Especificacao complementar</span>
+                                    <textarea id="itemEspecificacao" placeholder="Marca/modelo quando aplicavel, padrao minimo, unidade, embalagem etc."></textarea>
+                                </label>
+                            </div>
+                            <div class="actions">
+                                <button class="primary" type="submit">Adicionar item</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Cesta</span>
+                            <h3>Itens pesquisados</h3>
+                        </div>
+                        <button onclick="carregarProcessoSelecionado()">Atualizar</button>
+                    </div>
+                    <div class="panel-body">
+                        <div class="list" id="listaItens"></div>
+                        <div class="actions">
+                            <textarea id="itensImportacao" class="wide" placeholder="Importe itens colando linhas no formato: codigo;descricao;unidade;quantidade;categoria"></textarea>
+                            <button onclick="importarItensTexto()">Importar linhas</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="grid" style="margin-top: 14px;">
                 <div class="panel">
                     <div class="panel-title">
                         <div>
                             <span>Fonte de preco</span>
-                            <h3>Lancar evidencia</h3>
+                            <h3>Vincular valor ao item</h3>
                         </div>
                         <span class="badge" id="processoSelecionadoBadge">Nenhum processo</span>
                     </div>
                     <div class="panel-body">
                         <form id="fonteForm" onsubmit="criarFonte(event)">
                             <div class="form-grid">
+                                <label>
+                                    <span>Item da cesta</span>
+                                    <select id="fonteItemId"></select>
+                                </label>
                                 <label>
                                     <span>Tipo da fonte</span>
                                     <select id="fonteTipo">
@@ -782,7 +853,9 @@
     <script>
         const fmtMoney = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
         let processos = [];
+        let itens = [];
         let processoSelecionado = null;
+        let itemSelecionado = null;
 
         function setStatus(message) {
             document.getElementById('status').textContent = message;
@@ -826,6 +899,7 @@
             });
             const data = await res.json();
             processoSelecionado = data.id;
+            itemSelecionado = null;
             limparProcesso();
             await carregarProcessos();
             await carregarProcessoSelecionado();
@@ -845,6 +919,7 @@
                 button.className = `processo-item ${proc.id === processoSelecionado ? 'active' : ''}`;
                 button.onclick = async () => {
                     processoSelecionado = proc.id;
+                    itemSelecionado = null;
                     await carregarProcessos();
                     await carregarProcessoSelecionado();
                 };
@@ -862,6 +937,9 @@
         async function carregarProcessoSelecionado() {
             if (!processoSelecionado) {
                 document.getElementById('processoSelecionadoBadge').textContent = 'Nenhum processo';
+                document.getElementById('itemSelecionadoBadge').textContent = 'Nenhum item';
+                document.getElementById('listaItens').innerHTML = '<p>Crie uma pesquisa antes de adicionar itens.</p>';
+                document.getElementById('fonteItemId').innerHTML = '<option value="">Nenhum item</option>';
                 document.getElementById('tabelaFontes').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
                 document.getElementById('atasResumoBadge').textContent = '0 atas';
                 document.getElementById('tabelaAtas').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
@@ -872,9 +950,16 @@
             }
             const res = await api(`/processos/${processoSelecionado}`);
             const data = await res.json();
+            itens = data.itens || [];
+            if (!itemSelecionado && itens.length) {
+                itemSelecionado = itens[0].id;
+            }
             document.getElementById('processoSelecionadoBadge').textContent = `#${data.processo.id} ${data.processo.titulo}`;
+            document.getElementById('m-itens').textContent = itens.length;
             atualizarResumo(data.resumo);
             atualizarResumoAtas(data.resumo_atas);
+            renderItens(data.resumo_itens || []);
+            atualizarSelectItens();
             renderFontes(data.fontes);
             renderAtas(data.atas);
             await carregarChecklist();
@@ -883,7 +968,6 @@
 
         function atualizarResumo(resumo) {
             document.getElementById('m-fontes').textContent = resumo.fontes_aproveitadas || 0;
-            document.getElementById('m-descartes').textContent = resumo.fontes_descartadas || 0;
             document.getElementById('m-mediana').textContent = resumo.preco_estimado_mediana
                 ? fmtMoney.format(resumo.preco_estimado_mediana)
                 : 'R$ 0';
@@ -914,6 +998,47 @@
                     <td><button class="danger" onclick="excluirFonte(${item.id})">Excluir</button></td>
                 `;
                 tabela.appendChild(row);
+            });
+        }
+
+        function renderItens(resumoItens) {
+            const lista = document.getElementById('listaItens');
+            lista.innerHTML = '';
+            if (!itens.length) {
+                lista.innerHTML = '<p>Nenhum item cadastrado. Adicione individualmente ou importe linhas.</p>';
+                document.getElementById('itemSelecionadoBadge').textContent = 'Nenhum item';
+                return;
+            }
+            const resumoPorId = {};
+            resumoItens.forEach(entry => {
+                resumoPorId[entry.item.id] = entry.resumo;
+            });
+            itens.forEach(item => {
+                const resumo = resumoPorId[item.id] || {};
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `processo-item ${item.id === itemSelecionado ? 'active' : ''}`;
+                button.onclick = () => {
+                    itemSelecionado = item.id;
+                    renderItens(resumoItens);
+                    atualizarSelectItens();
+                };
+                button.innerHTML = `<strong>${item.codigo ? item.codigo + ' - ' : ''}${item.descricao}</strong><small>${item.quantidade || 1} ${item.unidade || ''} | ${resumo.fontes_aproveitadas || 0} fontes | mediana ${resumo.preco_estimado_mediana ? fmtMoney.format(resumo.preco_estimado_mediana) : '-'}</small>`;
+                lista.appendChild(button);
+            });
+            const atual = itens.find(item => item.id === itemSelecionado);
+            document.getElementById('itemSelecionadoBadge').textContent = atual ? `Item #${atual.id}` : 'Nenhum item';
+        }
+
+        function atualizarSelectItens() {
+            const select = document.getElementById('fonteItemId');
+            select.innerHTML = '<option value="">Fonte geral da pesquisa</option>';
+            itens.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.codigo ? item.codigo + ' - ' : ''}${item.descricao}`;
+                option.selected = item.id === itemSelecionado;
+                select.appendChild(option);
             });
         }
 
@@ -996,6 +1121,71 @@
             setStatus(data.ok ? 'Consulta PNCP concluida' : 'PNCP indisponivel');
         }
 
+        async function criarItem(event) {
+            event.preventDefault();
+            if (!processoSelecionado) {
+                setStatus('Crie ou selecione uma pesquisa primeiro');
+                return;
+            }
+            const payload = {
+                processo_id: processoSelecionado,
+                codigo: document.getElementById('itemCodigo').value.trim(),
+                descricao: document.getElementById('itemDescricao').value.trim(),
+                unidade: document.getElementById('itemUnidade').value.trim(),
+                quantidade: Number(document.getElementById('itemQuantidade').value || 1),
+                categoria: document.getElementById('itemCategoria').value.trim(),
+                termo_busca: document.getElementById('itemTermoBusca').value.trim(),
+                especificacao: document.getElementById('itemEspecificacao').value.trim()
+            };
+            setStatus('Adicionando item...');
+            const res = await api('/itens', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            itemSelecionado = data.id;
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemQuantidade').value = 1;
+            await carregarProcessoSelecionado();
+            setStatus('Item adicionado');
+        }
+
+        async function importarItensTexto() {
+            if (!processoSelecionado) {
+                setStatus('Crie ou selecione uma pesquisa primeiro');
+                return;
+            }
+            const linhas = document.getElementById('itensImportacao').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const payload = {
+                processo_id: processoSelecionado,
+                itens: linhas.map(linha => {
+                    const [codigo, descricao, unidade, quantidade, categoria] = linha.split(';').map(campo => (campo || '').trim());
+                    return {
+                        codigo,
+                        descricao,
+                        unidade,
+                        quantidade: Number(quantidade || 1),
+                        categoria,
+                        termo_busca: descricao
+                    };
+                }).filter(item => item.descricao)
+            };
+            if (!payload.itens.length) {
+                setStatus('Nenhum item valido para importar');
+                return;
+            }
+            setStatus('Importando itens...');
+            await api('/itens/importar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('itensImportacao').value = '';
+            await carregarProcessoSelecionado();
+            setStatus('Itens importados');
+        }
+
         function renderPncp(data) {
             const tabela = document.getElementById('tabelaPncp');
             tabela.innerHTML = '';
@@ -1032,6 +1222,7 @@
             const obs = document.getElementById('observacoesFonte').value.trim();
             const payload = {
                 processo_id: processoSelecionado,
+                item_id: Number(document.getElementById('fonteItemId').value || 0) || null,
                 fonte_tipo: document.getElementById('fonteTipo').value,
                 descricao_item: document.getElementById('descricaoItem').value.trim(),
                 valor_unitario: Number(document.getElementById('valorUnitario').value || 0),

@@ -23,6 +23,7 @@ def _similaridade(a: str, b: str) -> float:
 
 def avaliar_comparabilidade(snapshot: dict[str, Any]) -> dict[str, Any]:
     processo = snapshot.get("processo", {})
+    itens_por_id = {int(item["id"]): item for item in snapshot.get("itens", [])}
     objeto = processo.get("descricao_objeto", "")
     fontes = snapshot.get("fontes", [])
     valores = [
@@ -32,10 +33,12 @@ def avaliar_comparabilidade(snapshot: dict[str, Any]) -> dict[str, Any]:
     ]
     referencia = median(valores) if valores else None
 
-    itens = []
+    avaliacoes = []
     for fonte in fontes:
+        item_ref = itens_por_id.get(int(fonte.get("item_id") or 0), {})
+        descricao_referencia = item_ref.get("descricao") or item_ref.get("termo_busca") or objeto
         valor = float(fonte.get("valor_unitario") or 0)
-        similaridade = _similaridade(objeto, fonte.get("descricao_item", ""))
+        similaridade = _similaridade(descricao_referencia, fonte.get("descricao_item", ""))
         desvio = None
         if referencia and valor > 0:
             desvio = ((valor - referencia) / referencia) * 100
@@ -52,9 +55,11 @@ def avaliar_comparabilidade(snapshot: dict[str, Any]) -> dict[str, Any]:
         if fonte.get("uf") and processo.get("local_execucao") and fonte["uf"].lower() in processo["local_execucao"].lower():
             score += 10
         score = round(min(score, 100), 1)
-        itens.append(
+        avaliacoes.append(
             {
                 "fonte_id": fonte.get("id"),
+                "item_id": fonte.get("item_id"),
+                "item_pesquisa": item_ref.get("descricao", ""),
                 "descricao_item": fonte.get("descricao_item", ""),
                 "fonte_tipo": fonte.get("fonte_tipo", ""),
                 "valor_unitario": valor,
@@ -67,5 +72,5 @@ def avaliar_comparabilidade(snapshot: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "referencia_mediana": referencia,
-        "itens": sorted(itens, key=lambda item: item["score"], reverse=True),
+        "itens": sorted(avaliacoes, key=lambda item: item["score"], reverse=True),
     }

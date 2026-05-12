@@ -2,7 +2,7 @@
 
 ## Proposta
 
-O Icaro sera uma ferramenta para apoiar a elaboracao da fase preparatoria de licitacoes, com foco em pesquisa de precos, atas de registro de precos e organizacao documental do processo.
+O Icaro sera uma ferramenta para apoiar a pesquisa de mercado por cesta de itens, com foco em buscar precos praticados no PNCP, parametrizar fontes por item e gerar relatorio administrativo de pesquisa de precos.
 
 ## Publico-alvo
 
@@ -17,8 +17,9 @@ O Icaro sera uma ferramenta para apoiar a elaboracao da fase preparatoria de lic
 
 Processos preparatorios costumam sofrer com:
 
-- pesquisa de precos pouco documentada;
-- dificuldade para encontrar contratacoes comparaveis;
+- pesquisa de precos pouco documentada por item;
+- dificuldade para encontrar contratacoes comparaveis no PNCP;
+- perda da origem dos valores coletados;
 - uso fragil de fontes;
 - ausencia de memoria de calculo clara;
 - dificuldade de justificar descartes;
@@ -27,24 +28,25 @@ Processos preparatorios costumam sofrer com:
 
 ## MVP
 
-### 1. Cadastro do objeto
+### 1. Cadastro da pesquisa e cesta de itens
 
 Campos:
 
-- descricao do objeto;
-- categoria;
-- unidade de fornecimento;
-- quantidade pretendida;
+- titulo da pesquisa;
+- descricao geral do objeto;
+- lista de itens;
+- codigo, descricao, unidade e quantidade por item;
+- termo de busca PNCP por item;
 - local de entrega/execucao;
-- prazo esperado;
 - observacoes tecnicas.
 
 ### 2. Pesquisa PNCP
 
 Funcionalidades:
 
-- buscar licitacoes/contratacoes por palavra-chave;
+- buscar licitacoes/contratacoes por termo de cada item;
 - filtrar por periodo, UF, modalidade e situacao;
+- vincular fontes encontradas ao item pesquisado;
 - marcar fontes como aproveitadas ou descartadas;
 - registrar justificativa do descarte.
 
@@ -61,9 +63,9 @@ Funcionalidades:
 
 Funcionalidades:
 
-- media;
-- mediana;
-- menor preco valido;
+- media por item;
+- mediana por item;
+- menor preco valido por item;
 - intervalo de confianca simples;
 - alerta de outlier;
 - memoria de calculo.
@@ -72,10 +74,10 @@ Funcionalidades:
 
 Saidas:
 
-- relatorio de pesquisa de precos;
+- relatorio de pesquisa de mercado por item;
 - quadro comparativo;
 - justificativa metodologica;
-- lista de fontes;
+- lista de fontes e origem dos valores;
 - lista de descartes;
 - anexos.
 
