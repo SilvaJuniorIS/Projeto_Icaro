@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ÍCARO — apoio administrativo à pesquisa de mercado por cesta de itens, PNCP, fontes e relatórios. Parte do ecossistema AtlasNex.">
+    <title>ÍCARO — Pesquisa de mercado e rastreio no PNCP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0f4f8;
+            --surface: #ffffff;
+            --ink: #0d2137;
+            --muted: #5a6b7a;
+            --brand: #0d4f7c;
+            --brand-2: #123e5c;
+            --accent: #246fba;
+            --accent-2: #18875f;
+            --accent-soft: #e6f0fb;
+            --line: #d0dae4;
+            --shadow: 0 14px 40px rgba(13, 33, 55, 0.1);
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+        }
+
+        a { color: var(--accent); font-weight: 600; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+        .wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
+
+        header.hero {
+            background: linear-gradient(165deg, var(--brand) 0%, var(--brand-2) 52%, #0a3048 100%);
+            color: #f7fafc;
+            padding: 48px 0 56px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header.hero::after {
+            content: "";
+            position: absolute;
+            right: -18%;
+            top: -25%;
+            width: 50%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(36, 111, 186, 0.35) 0%, transparent 62%);
+            pointer-events: none;
+        }
+
+        .hero-inner { position: relative; z-index: 1; display: grid; gap: 28px; align-items: center; }
+        @media (min-width: 860px) {
+            .hero-inner { grid-template-columns: 1.15fr 0.85fr; gap: 40px; }
+        }
+
+        .hero-badge {
+            display: inline-block;
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(247, 250, 252, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            padding: 6px 12px;
+            border-radius: 999px;
+            margin-bottom: 14px;
+        }
+
+        .hero h1 {
+            font-family: Poppins, sans-serif;
+            font-size: clamp(1.75rem, 4vw, 2.35rem);
+            font-weight: 700;
+            line-height: 1.15;
+            margin: 0 0 12px;
+        }
+
+        .hero h1 span { color: #7ec8ff; }
+
+        .hero-lede {
+            margin: 0 0 22px;
+            font-size: 1.05rem;
+            color: rgba(247, 250, 252, 0.9);
+            max-width: 52ch;
+        }
+
+        .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-family: Poppins, sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); text-decoration: none; }
+
+        .btn-primary {
+            background: #fff;
+            color: var(--brand);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28); }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+        }
+
+        .btn-ghost:hover { background: rgba(255, 255, 255, 0.16); }
+
+        .hero-note {
+            margin-top: 14px;
+            font-size: 0.82rem;
+            color: rgba(247, 250, 252, 0.68);
+            max-width: 52ch;
+        }
+
+        .hero-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--radius);
+            padding: 22px;
+            backdrop-filter: blur(8px);
+        }
+
+        .hero-card h2 {
+            font-family: Poppins, sans-serif;
+            font-size: 1rem;
+            margin: 0 0 12px;
+            color: #9fd4ff;
+        }
+
+        .hero-card ul { margin: 0; padding-left: 18px; color: rgba(247, 250, 252, 0.92); font-size: 0.92rem; }
+        .hero-card li { margin-bottom: 8px; }
+
+        .logo-hero {
+            width: 88px;
+            height: 88px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: rgba(7, 24, 45, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            padding: 8px;
+            margin-bottom: 16px;
+        }
+
+        section.block { padding: 52px 0; }
+        section.block.alt { background: var(--surface); border-block: 1px solid var(--line); }
+
+        .eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin: 0 0 8px;
+        }
+
+        h2.section-title {
+            font-family: Poppins, sans-serif;
+            font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+            margin: 0 0 10px;
+        }
+
+        .section-lede { margin: 0 0 26px; color: var(--muted); max-width: 65ch; }
+
+        .grid-3 { display: grid; gap: 18px; }
+        @media (min-width: 720px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h3 { font-family: Poppins, sans-serif; font-size: 1.05rem; margin: 0 0 8px; }
+        .card p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+
+        .features { display: grid; gap: 16px; }
+        @media (min-width: 640px) { .features { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 900px) { .features { grid-template-columns: repeat(3, 1fr); } }
+
+        .feat {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 18px 18px 18px 20px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .feat strong { display: block; font-size: 0.95rem; margin-bottom: 6px; }
+
+        .social {
+            background: linear-gradient(135deg, var(--accent-soft) 0%, #fff 42%);
+            border: 1px solid rgba(36, 111, 186, 0.28);
+            border-radius: var(--radius);
+            padding: 28px;
+        }
+
+        .social .quote {
+            font-size: 1.05rem;
+            font-style: italic;
+            color: var(--brand);
+            margin: 0 0 18px;
+            line-height: 1.5;
+        }
+
+        .social .author { font-weight: 700; color: var(--ink); }
+        .social .role { font-size: 0.88rem; color: var(--muted); margin-top: 4px; }
+
+        .disclaimer {
+            margin-top: 18px;
+            padding: 12px 14px;
+            background: rgba(13, 33, 55, 0.05);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            border: 1px dashed var(--line);
+        }
+
+        .offer { display: grid; gap: 22px; align-items: stretch; }
+        @media (min-width: 800px) { .offer { grid-template-columns: 1fr 1fr; } }
+
+        .offer-box {
+            background: var(--brand);
+            color: #f7fafc;
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .offer-box h3 { font-family: Poppins, sans-serif; margin: 0 0 8px; font-size: 1.35rem; }
+        .offer-box .tag { color: #9fd4ff; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; }
+        .offer-box ul { margin: 16px 0 0; padding-left: 20px; color: rgba(247, 250, 252, 0.92); }
+        .offer-box li { margin-bottom: 10px; }
+
+        .offer-aside {
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 24px;
+            background: var(--surface);
+        }
+
+        .offer-aside h4 { margin: 0 0 10px; font-family: Poppins, sans-serif; font-size: 1.1rem; }
+        .offer-aside p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+        .price-line {
+            margin-top: 18px;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--brand);
+            font-family: Poppins, sans-serif;
+        }
+
+        .price-sub { font-size: 0.85rem; color: var(--muted); font-weight: 500; margin-top: 6px; }
+
+        footer.site {
+            padding: 36px 0 44px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.88rem;
+            border-top: 1px solid var(--line);
+        }
+
+        .foot-links { margin-top: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 22px; }
+
+        .dossier-section { padding: 56px 0 48px; background: linear-gradient(180deg, #e8eef5 0%, var(--bg) 100%); }
+        .dossier-intro { margin-bottom: 28px; }
+
+        .dossier-shell {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+            max-width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 22px 60px rgba(13, 33, 55, 0.12);
+            border: 1px solid var(--line);
+        }
+
+        @media (min-width: 720px) { .dossier-shell { grid-template-columns: 56px 1fr; } }
+
+        .dossier-spine {
+            background: linear-gradient(180deg, var(--accent) 0%, #1a5a8a 100%);
+            color: #fff;
+            padding: 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: Poppins, sans-serif;
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            writing-mode: horizontal-tb;
+        }
+
+        @media (min-width: 720px) {
+            .dossier-spine {
+                writing-mode: vertical-rl;
+                transform: rotate(180deg);
+                padding: 24px 10px;
+            }
+        }
+
+        .dossier-body { background: var(--surface); display: flex; flex-direction: column; min-height: 300px; }
+
+        .dossier-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border-bottom: 1px solid var(--line);
+            background: #f6f8fb;
+        }
+
+        .dossier-tab {
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 14px 16px;
+            border: none;
+            background: transparent;
+            font-family: Poppins, sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+
+        .dossier-tab:hover { color: var(--ink); background: rgba(36, 111, 186, 0.06); }
+        .dossier-tab[aria-selected="true"] {
+            color: var(--brand);
+            background: #fff;
+            border-bottom-color: var(--accent);
+        }
+
+        .dossier-panel { display: none; padding: 26px 24px 28px; animation: dossierFade 0.35s ease; }
+        .dossier-panel.active { display: block; }
+
+        @keyframes dossierFade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dossier-panel h3 { font-family: Poppins, sans-serif; margin: 0 0 10px; font-size: 1.15rem; color: var(--brand); }
+        .dossier-panel p { margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; max-width: 72ch; }
+        .dossier-panel ul { margin: 0; padding-left: 1.15rem; color: var(--muted); font-size: 0.93rem; }
+        .dossier-panel li { margin-bottom: 8px; }
+
+        .dossier-kpi {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .dossier-kpi span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(36, 111, 186, 0.3);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--brand);
+        }
+
+        .carousel-block { margin-top: 44px; padding-top: 36px; border-top: 1px solid var(--line); }
+
+        .carousel-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .carousel-head h3 { margin: 0; font-family: Poppins, sans-serif; font-size: 1.2rem; color: var(--brand); }
+        .carousel-head p { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+        .carousel {
+            position: relative;
+            border-radius: var(--radius);
+            background: #0d2137;
+            padding: 12px 12px 52px;
+            box-shadow: var(--shadow);
+        }
+
+        @media (min-width: 640px) { .carousel { padding: 16px 52px 52px; } }
+
+        .carousel-viewport { overflow: hidden; border-radius: 10px; background: #fff; width: 100%; }
+
+        .carousel-track {
+            display: flex;
+            width: 300%;
+            transition: transform 0.45s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+
+        .carousel-slide { flex: 0 0 33.333%; width: 33.333%; padding: 0; }
+
+        .carousel-slide figure { margin: 0; }
+
+        .carousel-slide .slide-visual {
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #e8f1fb 0%, #f7fafc 100%);
+        }
+
+        .carousel-slide img { display: block; max-width: 200px; height: auto; }
+
+        .carousel-caption {
+            padding: 14px 18px 16px;
+            background: #fff;
+            border-top: 1px solid var(--line);
+        }
+
+        .carousel-caption strong {
+            display: block;
+            font-family: Poppins, sans-serif;
+            font-size: 1rem;
+            color: var(--brand);
+            margin-bottom: 4px;
+        }
+
+        .carousel-caption span { font-size: 0.88rem; color: var(--muted); line-height: 1.45; }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: #fff;
+            color: var(--brand);
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        @media (min-width: 640px) { .carousel-nav { display: flex; } }
+
+        .carousel-nav:hover { background: var(--accent-soft); }
+        .carousel-nav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .carousel-nav.prev { left: 8px; }
+        .carousel-nav.next { right: 8px; }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 14px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 0 12px;
+        }
+
+        .carousel-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            border: none;
+            padding: 0;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+        }
+
+        .carousel-dot[aria-current="true"] { background: var(--accent); transform: scale(1.25); }
+        .carousel-dot:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+        .carousel-live {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="hero" id="top">
+        <div class="wrap hero-inner">
+            <div>
+                <span class="hero-badge">AtlasNex · ecossistema</span>
+                <img class="logo-hero" src="/assets/icaro-logo.svg" alt="Logotipo Ícaro" width="88" height="88">
+                <h1>ÍCA<span>RO</span><br>Pesquisa de mercado com rastreio no PNCP</h1>
+                <p class="hero-lede">
+                    Organize a cesta de itens, busque contratações públicas com <strong>similaridade à descrição</strong>,
+                    lance fontes com URL e justificativa de descarte, registre atas para carona e feche com relatório administrativo e planilha.
+                </p>
+                <div class="hero-ctas">
+                    <a class="btn btn-primary" id="link-painel-icaro" href="/" target="_blank" rel="noopener">Abrir painel operacional</a>
+                    <a class="btn btn-ghost" href="/atlasnex">Conhecer a AtlasNex</a>
+                    <a class="btn btn-ghost" href="/icaro-docs/MANUAL_ICARO.md" target="_blank" rel="noopener">Manual do usuário</a>
+                </div>
+                <p class="hero-note">
+                    O painel é servido por este host (por exemplo <code>uvicorn</code> em <code>127.0.0.1:8100</code>).
+                    Se publicar atrás de túnel ou outro domínio, use <code>?icaro_dashboard=</code> na URL desta página para apontar o botão
+                    <strong>Abrir painel operacional</strong> corretamente.
+                </p>
+            </div>
+            <div class="hero-card">
+                <h2>No processo preparatório, o Ícaro apoia</h2>
+                <ul>
+                    <li>Memória de cálculo por item (média, mediana, outliers) com fontes aproveitadas.</li>
+                    <li>Busca PNCP contextual: termo + texto de referência + variantes opcionais.</li>
+                    <li>Exportações MD, HTML, DOCX e XLSX para anexar ao processo.</li>
+                    <li>Checklist e comparabilidade para narrativa perante comissão e controle.</li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <section class="dossier-section" id="dossier" aria-labelledby="dossier-title">
+        <div class="wrap">
+            <div class="dossier-intro">
+                <p class="eyebrow">Material institucional</p>
+                <h2 class="section-title" id="dossier-title">Dossiê Ícaro — visão do produto</h2>
+                <p class="section-lede">
+                    Resumo por dimensão para apresentações internas: o que é, como se integra ao PNCP e que entregáveis administrativos produz.
+                    O carrossel abaixo usa ilustrações leves; substitua por capturas reais do painel quando disponíveis.
+                </p>
+            </div>
+
+            <div class="dossier-shell">
+                <div class="dossier-spine" aria-hidden="true">Ícaro</div>
+                <div class="dossier-body">
+                    <div class="dossier-tabs" role="tablist" aria-label="Secoes do dossie">
+                        <button type="button" class="dossier-tab" role="tab" id="tab-cap" aria-selected="true" aria-controls="panel-cap" tabindex="0">Capa</button>
+                        <button type="button" class="dossier-tab" role="tab" id="tab-plat" aria-selected="false" aria-controls="panel-plat" tabindex="-1">Fluxo</button>
+                        <button type="button" class="dossier-tab" role="tab" id="tab-dados" aria-selected="false" aria-controls="panel-dados" tabindex="-1">PNCP &amp; fontes</button>
+                        <button type="button" class="dossier-tab" role="tab" id="tab-ops" aria-selected="false" aria-controls="panel-ops" tabindex="-1">Relatórios</button>
+                        <button type="button" class="dossier-tab" role="tab" id="tab-eco" aria-selected="false" aria-controls="panel-eco" tabindex="-1">Ecossistema</button>
+                    </div>
+
+                    <div class="dossier-panel active" role="tabpanel" id="panel-cap" aria-labelledby="tab-cap">
+                        <h3>Resumo executivo</h3>
+                        <p>
+                            O Ícaro é a camada de <strong>apoio à pesquisa de mercado por item</strong> no guarda-chuvas AtlasNex: documenta critérios,
+                            origem dos valores e descartes, alinhado a boas práticas da Lei 14.133/2021 e da IN SEGES/ME nº 65/2021.
+                        </p>
+                        <ul>
+                            <li>Posicionamento: administrativo, claro e auditável — não “preço automático”.</li>
+                            <li>Entrega: painel web + API + SQLite em ambiente controlado.</li>
+                            <li>Próximo passo: piloto com equipe de compras e revisão jurídica do ente.</li>
+                        </ul>
+                        <div class="dossier-kpi">
+                            <span>PNCP</span>
+                            <span>Similaridade</span>
+                            <span>Fontes</span>
+                            <span>Relatório</span>
+                        </div>
+                    </div>
+
+                    <div class="dossier-panel" role="tabpanel" id="panel-plat" aria-labelledby="tab-plat" hidden>
+                        <h3>Fluxo de trabalho</h3>
+                        <p>
+                            <strong>Pesquisa</strong> (objeto geral) → <strong>Itens</strong> da cesta (importação ou formulário) →
+                            <strong>Busca PNCP</strong> por item → <strong>Fontes</strong> com valor unitário conferido → opcional <strong>Atas</strong> →
+                            <strong>Checklist</strong> e exportações.
+                        </p>
+                        <ul>
+                            <li>Botão PNCP ao lado de cada item preenche termo e referência.</li>
+                            <li>Rascunho de fonte a partir do resultado PNCP (revisar valor total vs. unitário).</li>
+                            <li>Identidade visual administrativa, distinta do tom mais comercial do Hermes.</li>
+                        </ul>
+                    </div>
+
+                    <div class="dossier-panel" role="tabpanel" id="panel-dados" aria-labelledby="tab-dados" hidden>
+                        <h3>Dados públicos e rastreio</h3>
+                        <p>
+                            Consulta à API pública de <strong>contratações</strong> do PNCP; ordenação por similaridade lexical ao texto do item;
+                            armazenamento de URL, órgão, datas e observações para trilha administrativa.
+                        </p>
+                        <ul>
+                            <li>SQLite para MVP local; backup periódico de <code>data/icaro.sqlite3</code>.</li>
+                            <li>Comparabilidade e score como apoio à narrativa, não decisão automática.</li>
+                        </ul>
+                    </div>
+
+                    <div class="dossier-panel" role="tabpanel" id="panel-ops" aria-labelledby="tab-ops" hidden>
+                        <h3>Relatórios e planilhas</h3>
+                        <p>
+                            Geração de relatório em Markdown, HTML (impressão/PDF pelo navegador), DOCX editável e XLSX para conferência
+                            e reaproveitamento no processo.
+                        </p>
+                        <ul>
+                            <li>Lista de descartes e fontes aproveitadas documentadas.</li>
+                            <li>Integração futura com outros módulos AtlasNex via mesma política de dados do ente.</li>
+                        </ul>
+                    </div>
+
+                    <div class="dossier-panel" role="tabpanel" id="panel-eco" aria-labelledby="tab-eco" hidden>
+                        <h3>Ecossistema AtlasNex</h3>
+                        <p>
+                            O Ícaro complementa o <strong>Hermes</strong> (inteligência comercial de oportunidades) e convive com as linhas
+                            Minerva e Pandora no roadmap da holding.
+                        </p>
+                        <ul>
+                            <li>Portal institucional: <a href="/atlasnex">AtlasNex</a>.</li>
+                            <li>Painel operacional: <a href="/">Ícaro — painel</a>.</li>
+                            <li>Manual: <a href="/icaro-docs/MANUAL_ICARO.md" target="_blank" rel="noopener">MANUAL_ICARO.md</a>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="carousel-block">
+                <div class="carousel-head">
+                    <h3>Carrossel — jornada resumida</h3>
+                    <p>Três visões · substitua por capturas 16:9 quando disponíveis</p>
+                </div>
+
+                <div class="carousel" id="icaro-carousel" aria-roledescription="carousel" aria-label="Destaques do Ícaro">
+                    <p class="carousel-live" id="carousel-live" aria-live="polite"></p>
+                    <button type="button" class="carousel-nav prev" id="car-prev" aria-label="Slide anterior">‹</button>
+                    <button type="button" class="carousel-nav next" id="car-next" aria-label="Proximo slide">›</button>
+
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="carousel-track">
+                            <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="1 de 3">
+                                <figure>
+                                    <div class="slide-visual">
+                                        <img src="/assets/icaro-logo.svg" width="160" height="auto" alt="Marca Ícaro">
+                                    </div>
+                                    <figcaption class="carousel-caption">
+                                        <strong>Identidade</strong>
+                                        <span>Pesquisa de mercado com foco em rastreio, método e relatório administrativo.</span>
+                                    </figcaption>
+                                </figure>
+                            </div>
+                            <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="2 de 3">
+                                <figure>
+                                    <div class="slide-visual" style="flex-direction:column;gap:12px;padding:24px;">
+                                        <strong style="font-family:Poppins,sans-serif;font-size:1.2rem;color:var(--brand);">Cesta + PNCP</strong>
+                                        <span style="color:var(--muted);text-align:center;max-width:36ch">Itens, termo de busca, texto de referência e resultados ordenados por similaridade.</span>
+                                    </div>
+                                    <figcaption class="carousel-caption">
+                                        <strong>Coleta orientada</strong>
+                                        <span>Variantes de consulta e deduplicação para ampliar cobertura sem perder controle.</span>
+                                    </figcaption>
+                                </figure>
+                            </div>
+                            <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="3 de 3">
+                                <figure>
+                                    <div class="slide-visual" style="flex-direction:column;gap:12px;padding:24px;">
+                                        <strong style="font-family:Poppins,sans-serif;font-size:1.2rem;color:var(--accent-2);">Relatório &amp; XLSX</strong>
+                                        <span style="color:var(--muted);text-align:center;max-width:36ch">Fecho documental para o processo preparatório.</span>
+                                    </div>
+                                    <figcaption class="carousel-caption">
+                                        <strong>Entrega</strong>
+                                        <span>Quadro de fontes, descartes e memória de cálculo exportáveis.</span>
+                                    </figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-dots" id="carousel-dots" role="tablist" aria-label="Selecionar slide"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="block" id="produto">
+        <div class="wrap">
+            <p class="eyebrow">O produto</p>
+            <h2 class="section-title">Apoio administrativo, não decisão automática</h2>
+            <p class="section-lede">
+                O Ícaro foi desenhado para equipes que precisam <strong>justificar preços praticados</strong> e manter a origem dos valores por item,
+                com linguagem adequada a comissão de contratação e controle interno.
+            </p>
+            <div class="grid-3">
+                <article class="card">
+                    <h3>Pesquisa por cesta</h3>
+                    <p>Cadastro, importação em lote e vínculo de fontes a cada item com mediana e tratamento de outliers.</p>
+                </article>
+                <article class="card">
+                    <h3>PNCP contextual</h3>
+                    <p>Busca com referência textual, consultas combinadas e ordenação por similaridade ao objeto.</p>
+                </article>
+                <article class="card">
+                    <h3>Processo e normas</h3>
+                    <p>Estrutura alinhada à IN 65/2021 e à Lei 14.133/2021 (art. 23), com limites explícitos do software.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="block alt" id="para-quem">
+        <div class="wrap">
+            <p class="eyebrow">Para quem é</p>
+            <h2 class="section-title">Compras, comissões e consultorias B2G</h2>
+            <p class="section-lede">
+                Setores de compras, comissões de contratação, pregoeiros, controle interno, secretarias demandantes e consultorias que apoiam municípios e entidades.
+            </p>
+            <div class="features">
+                <div class="feat"><strong>Planejamento e TR</strong> consolidação de pesquisa de mercado por item com anexos.</div>
+                <div class="feat"><strong>Equipe de licitações</strong> registro de fontes PNCP e descartes documentados.</div>
+                <div class="feat"><strong>Consultorias</strong> mesmo fluxo replicável em múltiplos órgãos clientes.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="block" id="funcionalidades">
+        <div class="wrap">
+            <p class="eyebrow">Funcionalidades em destaque</p>
+            <h2 class="section-title">O que o painel já entrega no MVP</h2>
+            <p class="section-lede">Lista objetiva — evolução contínua conforme roadmap em <code>PLANO_PRODUTO_ICARO.md</code>.</p>
+            <div class="features">
+                <div class="feat"><strong>Pesquisas e itens</strong> objeto geral, cesta, termo PNCP por item, importação CSV-like.</div>
+                <div class="feat"><strong>Busca PNCP</strong> datas, variantes, tabela com similaridade e rascunho de fonte.</div>
+                <div class="feat"><strong>Fontes e atas</strong> valor unitário, URL, aproveitamento, atas para carona (registro manual).</div>
+                <div class="feat"><strong>Checklist e comparabilidade</strong> apoio ao texto do processo preparatório.</div>
+                <div class="feat"><strong>Exportação</strong> MD, HTML, DOCX, XLSX.</div>
+                <div class="feat"><strong>API FastAPI</strong> mesma base usada pelo painel, para evoluções futuras.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="block alt" id="prova-social">
+        <div class="wrap">
+            <p class="eyebrow">Prova social (modelo)</p>
+            <h2 class="section-title">Tom de case — exemplo para layout</h2>
+            <p class="section-lede">Substitua por depoimentos reais quando houver autorização institucional.</p>
+            <div class="social">
+                <p class="quote">
+                    “Passamos a anexar ao processo um quadro único de fontes com link ao PNCP e justificativa dos descartes.
+                    A comissão ganhou tempo na sessão pública.”
+                </p>
+                <div class="author">Nome modelo — ilustrativo</div>
+                <div class="role">Coordenação de compras · órgão fictício para layout</div>
+                <div class="disclaimer">
+                    <strong>Importante:</strong> texto modelo para apresentação. Não representa declaração auditada de resultado.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="block" id="oferta">
+        <div class="wrap">
+            <p class="eyebrow">Implantação</p>
+            <h2 class="section-title">Piloto Ícaro — enquadramento</h2>
+            <p class="section-lede">
+                O MVP roda em ambiente local ou servidor do cliente. Dimensionamento, SSO e integração com Hermes seguem política AtlasNex.
+            </p>
+            <div class="offer">
+                <div class="offer-box">
+                    <div class="tag">PACOTE TÍPICO</div>
+                    <h3>Piloto em ambiente controlado</h3>
+                    <ul>
+                        <li>Instalação do Ícaro na infraestrutura acordada (Windows ou Linux).</li>
+                        <li>Parametrização de até <strong>3 pesquisas de mercado</strong> piloto com itens reais.</li>
+                        <li>Sessão de 2 horas com compras e jurídico: fluxo PNCP, fontes e relatório.</li>
+                        <li>Entrega do manual e checklist de adoção.</li>
+                    </ul>
+                </div>
+                <div class="offer-aside">
+                    <h4>Investimento e próximo passo</h4>
+                    <p>
+                        Valores em proposta formal. Pré-requisitos: acesso à rede para API PNCP e responsável por backup do SQLite.
+                    </p>
+                    <div class="price-line">Sob consulta</div>
+                    <div class="price-sub">Envie volume de itens e prazo desejado para o estudo de mercado.</div>
+                    <p style="margin-top:22px;display:flex;flex-wrap:wrap;gap:10px">
+                        <a class="btn btn-primary" id="link-painel-icaro-2" href="/" target="_blank" rel="noopener" style="display:inline-flex;color:var(--brand)">Abrir painel</a>
+                        <a class="btn btn-primary" href="/atlasnex" style="display:inline-flex;background:var(--brand);color:#fff;border:1px solid rgba(255,255,255,0.2)">AtlasNex</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="block alt" style="text-align:center;padding:40px 0 52px">
+        <div class="wrap">
+            <h2 class="section-title" style="margin-bottom:14px">Seguir para o painel</h2>
+            <p class="section-lede" style="margin-left:auto;margin-right:auto">
+                Cadastre a pesquisa, monte a cesta e documente as fontes com o mesmo rigor do processo administrativo.
+            </p>
+            <div class="hero-ctas" style="justify-content:center">
+                <a class="btn btn-primary" id="link-painel-icaro-3" href="/" target="_blank" rel="noopener">Abrir painel operacional</a>
+                <a class="btn btn-primary" href="/atlasnex" style="background:var(--brand);color:#fff;border:1px solid rgba(255,255,255,0.15)">Voltar à AtlasNex</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site">
+        <div class="wrap">
+            <p><strong>ÍCARO</strong> · Pesquisa de mercado e PNCP · Ecossistema <a href="/atlasnex">AtlasNex</a></p>
+            <div class="foot-links">
+                <a id="foot-painel" href="/" target="_blank" rel="noopener">Painel</a>
+                <a href="/icaro-docs/MANUAL_ICARO.md" target="_blank" rel="noopener">Manual</a>
+                <a href="/atlasnex">AtlasNex</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var dash = params.get("icaro_dashboard");
+            if (dash) {
+                try {
+                    var u = new URL(dash);
+                    ["link-painel-icaro", "link-painel-icaro-2", "link-painel-icaro-3", "foot-painel"].forEach(function (id) {
+                        var a = document.getElementById(id);
+                        if (a) a.href = u.href;
+                    });
+                } catch (e) { /* ignore */ }
+            }
+
+            var tabs = Array.prototype.slice.call(document.querySelectorAll(".dossier-tab"));
+            var panels = {
+                "tab-cap": document.getElementById("panel-cap"),
+                "tab-plat": document.getElementById("panel-plat"),
+                "tab-dados": document.getElementById("panel-dados"),
+                "tab-ops": document.getElementById("panel-ops"),
+                "tab-eco": document.getElementById("panel-eco")
+            };
+
+            function selectTab(id) {
+                tabs.forEach(function (t) {
+                    var on = t.id === id;
+                    t.setAttribute("aria-selected", on ? "true" : "false");
+                    t.tabIndex = on ? 0 : -1;
+                });
+                Object.keys(panels).forEach(function (key) {
+                    var p = panels[key];
+                    if (!p) return;
+                    if (key === id) {
+                        p.classList.add("active");
+                        p.removeAttribute("hidden");
+                    } else {
+                        p.classList.remove("active");
+                        p.setAttribute("hidden", "");
+                    }
+                });
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener("click", function () { selectTab(tab.id); });
+            });
+
+            var track = document.getElementById("carousel-track");
+            var prev = document.getElementById("car-prev");
+            var next = document.getElementById("car-next");
+            var dotsWrap = document.getElementById("carousel-dots");
+            var live = document.getElementById("carousel-live");
+            var total = 3;
+            var idx = 0;
+
+            function announce() {
+                if (live) live.textContent = "Slide " + (idx + 1) + " de " + total;
+            }
+
+            function renderDots() {
+                if (!dotsWrap) return;
+                dotsWrap.innerHTML = "";
+                for (var i = 0; i < total; i++) {
+                    var b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "carousel-dot";
+                    b.setAttribute("aria-label", "Ir para slide " + (i + 1));
+                    b.setAttribute("aria-current", i === idx ? "true" : "false");
+                    (function (j) {
+                        b.addEventListener("click", function () {
+                            idx = j;
+                            go();
+                        });
+                    })(i);
+                    dotsWrap.appendChild(b);
+                }
+            }
+
+            function go() {
+                if (track) track.style.transform = "translateX(-" + (idx * (100 / total)) + "%)";
+                if (dotsWrap) {
+                    var dots = dotsWrap.querySelectorAll(".carousel-dot");
+                    for (var i = 0; i < dots.length; i++) {
+                        dots[i].setAttribute("aria-current", i === idx ? "true" : "false");
+                    }
+                }
+                announce();
+            }
+
+            if (prev) prev.addEventListener("click", function () {
+                idx = (idx - 1 + total) % total;
+                go();
+            });
+            if (next) next.addEventListener("click", function () {
+                idx = (idx + 1) % total;
+                go();
+            });
+
+            renderDots();
+            go();
+
+            var el = document.getElementById("icaro-carousel");
+            if (el) {
+                var sx = 0;
+                el.addEventListener("touchstart", function (e) {
+                    sx = e.changedTouches[0].screenX;
+                }, { passive: true });
+                el.addEventListener("touchend", function (e) {
+                    var dx = e.changedTouches[0].screenX - sx;
+                    if (Math.abs(dx) > 50) {
+                        if (dx < 0) { idx = (idx + 1) % total; go(); }
+                        else { idx = (idx - 1 + total) % total; go(); }
+                    }
+                }, { passive: true });
+            }
+        })();
+    </script>
+</body>
+</html>

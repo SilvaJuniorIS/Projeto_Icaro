@@ -151,7 +151,12 @@ def dashboard() -> str:
 
 @app.get("/atlasnex", response_class=HTMLResponse)
 def atlasnex_hub() -> str:
-    return (BASE_DIR / "atlasnex-dashboard.html").read_text(encoding="utf-8")
+    return (BASE_DIR / "atlasnex.html").read_text(encoding="utf-8")
+
+
+@app.get("/icaro", response_class=HTMLResponse)
+def icaro_apresentacao() -> str:
+    return (BASE_DIR / "icaro-index.html").read_text(encoding="utf-8")
 
 
 @app.get("/health")

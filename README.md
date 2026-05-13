@@ -52,7 +52,7 @@ MVP local inicial. Ja existem API FastAPI, banco SQLite, cadastro de pesquisas, 
 
 ## AtlasNex (portal do ecossistema)
 
-- URL: `http://127.0.0.1:8100/atlasnex`
+- URL: `http://127.0.0.1:8100/atlasnex` (mesma estrutura visual do portal Hermes: holding + ecossistema). Apresentação do produto Ícaro: `http://127.0.0.1:8100/icaro`.
 - Cartoes para **Icaro** (abrir em nova aba ou iframe na mesma origem) e **Hermes** (ativado ao salvar a URL em **Integracao**).
 - Manual do usuario: `http://127.0.0.1:8100/icaro-docs/MANUAL_ICARO.md` ou ficheiro `docs/MANUAL_ICARO.md`.
 
@@ -77,6 +77,7 @@ Depois acesse:
 
 ```text
 http://127.0.0.1:8100
+http://127.0.0.1:8100/icaro
 http://127.0.0.1:8100/atlasnex
 ```
 
@@ -94,7 +95,8 @@ Icaro/
   output/
   src/
   api.py
-  atlasnex-dashboard.html
+  atlasnex.html
+  icaro-index.html
   dashboard.html
   requirements.txt
   INICIAR_ICARO.bat

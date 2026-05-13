@@ -30,6 +30,7 @@ if errorlevel 1 (
 echo.
 echo Iniciando Icaro em http://127.0.0.1:8100
 echo Hub AtlasNex: http://127.0.0.1:8100/atlasnex
+echo Apresentacao Icaro: http://127.0.0.1:8100/icaro
 echo.
 start "" "http://127.0.0.1:8100"
 "venv\Scripts\python.exe" -m uvicorn api:app --host 127.0.0.1 --port 8100

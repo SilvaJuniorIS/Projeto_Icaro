@@ -37,7 +37,7 @@ python -m uvicorn api:app --host 127.0.0.1 --port 8100
 | Pagina | URL |
 |--------|-----|
 | Painel principal do Icaro | `http://127.0.0.1:8100/` |
-| Hub AtlasNex (portal) | `http://127.0.0.1:8100/atlasnex` |
+| Apresentação Ícaro (antes do painel) | `http://127.0.0.1:8100/icaro` |
 | Manual (Markdown) | `http://127.0.0.1:8100/icaro-docs/MANUAL_ICARO.md` |
 | API (documentacao automatica) | `http://127.0.0.1:8100/docs` |
 
