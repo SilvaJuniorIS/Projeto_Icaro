@@ -1,0 +1,23 @@
+---
+description: Sempre versionar alteracoes com commit ao terminar o trabalho
+alwaysApply: true
+---
+
+# Git: commit ao final das alteracoes
+
+## Obrigatorio
+
+Ao concluir um conjunto de alteracoes neste repositorio (codigo, docs, configuracao relevante):
+
+1. Executar `git status` e rever o que mudou.
+2. Fazer **stage** apenas dos ficheiros que fazem parte da entrega (evitar `venv/`, artefactos gerados e, salvo pedido explicito, ficheiros de dados locais como `data/*.sqlite3` se forem so ruido de execucao).
+3. Executar **`git commit`** com mensagem clara em portugues ou ingles (imperativo curto), ex.: `feat: ...`, `fix: ...`, `docs: ...`.
+4. Se nao houver alteracoes para commitar, nao forcar commit vazio.
+
+## Quando o utilizador pedir so analise ou leitura
+
+Nao e necessario commit se **nao** houver modificacoes em ficheiros.
+
+## Permissoes
+
+Pedir permissao `git_write` ao correr comandos de commit no ambiente do agente.
