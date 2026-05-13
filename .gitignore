@@ -14,3 +14,6 @@ __pycache__/
 output/*.xlsx
 output/*.csv
 
+# Base SQLite local (gerada em runtime pelo Icaro)
+data/*.sqlite3
+
