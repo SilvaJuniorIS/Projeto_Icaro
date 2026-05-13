@@ -85,14 +85,29 @@
             color: #d7e0e7;
             background: transparent;
             border: 0;
-            cursor: default;
+            cursor: pointer;
             text-align: left;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+        }
+
+        .nav-item:focus-visible {
+            outline: 2px solid #7eb8ea;
+            outline-offset: 2px;
         }
 
         .nav-item.active {
             background: var(--blue);
             color: #ffffff;
             font-weight: 700;
+        }
+
+        .nav-item.active:hover {
+            background: #1d5f9e;
         }
 
         .note {
@@ -142,11 +157,64 @@
             border-radius: 7px;
             display: inline-flex;
             align-items: center;
-            padding: 0 12px;
+            padding: 8px 12px;
             background: var(--surface);
             color: var(--muted);
             font-size: 13px;
-            white-space: nowrap;
+            white-space: normal;
+            max-width: min(100%, 380px);
+            line-height: 1.35;
+            align-self: flex-start;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .skip-link:focus {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            width: auto;
+            height: auto;
+            z-index: 100;
+            padding: 10px 14px;
+            background: var(--ink);
+            color: #fff;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .contexto-atual {
+            margin: 8px 0 0;
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 600;
+            max-width: 720px;
+        }
+
+        .workflow-banner {
+            margin: 0 0 18px;
+            padding: 12px 16px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--blue-soft);
+            color: var(--ink);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .workflow-banner strong {
+            color: var(--blue);
+        }
+
+        section[id$="Section"] {
+            scroll-margin-top: 16px;
         }
 
         .metrics {
@@ -262,6 +330,14 @@
             color: var(--red);
         }
 
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+
         .actions {
             display: flex;
             gap: 8px;
@@ -280,6 +356,13 @@
             padding: 10px;
             text-align: left;
             background: #f7fafb;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+        }
+
+        .processo-item:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
         }
 
         .processo-item.active {
@@ -297,11 +380,47 @@
             font-weight: 400;
         }
 
+        .cesta-item-wrap {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .cesta-item-wrap .processo-item {
+            min-width: 0;
+        }
+
+        .btn-compact {
+            min-height: 62px;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--surface-2);
+            color: var(--ink);
+            align-self: stretch;
+        }
+
+        .btn-compact:hover {
+            background: var(--blue-soft);
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .form-hint code {
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--surface-2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--ink);
+        }
+
         .table-wrap { overflow: auto; }
 
         table {
             width: 100%;
-            min-width: 860px;
+            min-width: 1020px;
             border-collapse: collapse;
         }
 
@@ -347,18 +466,93 @@
             text-align: center;
         }
 
+        .import-block {
+            display: grid;
+            gap: 8px;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .import-block textarea {
+            width: 100%;
+            min-height: 72px;
+        }
+
         @media (max-width: 1100px) {
-            .app, .grid { grid-template-columns: 1fr; }
+            .app {
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            aside {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                gap: 10px 14px;
+                padding: 14px 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .brand {
+                flex: 1 1 180px;
+                min-width: 0;
+            }
+
+            .brand h1 {
+                font-size: 20px;
+            }
+
+            .brand-logo {
+                width: 120px;
+            }
+
+            nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                width: 100%;
+                order: 3;
+            }
+
+            .nav-item {
+                flex: 1 1 calc(50% - 6px);
+                justify-content: center;
+                text-align: center;
+                font-size: 12px;
+                padding: 8px 8px;
+                min-height: 36px;
+            }
+
+            .note {
+                order: 4;
+                width: 100%;
+                margin-top: 0;
+            }
         }
 
         @media (max-width: 760px) {
             main { padding: 16px; }
-            .topbar { display: grid; }
+            .topbar {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .status { max-width: 100%; }
             .metrics, .form-grid { grid-template-columns: 1fr; }
+            .workflow-banner { font-size: 12px; }
         }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#pesquisaSection">Ir ao conteudo principal</a>
     <div class="app">
         <aside>
             <div class="brand">
@@ -366,16 +560,17 @@
                 <h1>Icaro</h1>
                 <span>Pesquisa de mercado no PNCP</span>
             </div>
-            <nav>
-                <button class="nav-item active" onclick="scrollToSection('pesquisaSection')">Pesquisa</button>
-                <button class="nav-item" onclick="scrollToSection('itensSection')">Itens da cesta</button>
-                <button class="nav-item" onclick="scrollToSection('pncpSection')">Busca PNCP</button>
-                <button class="nav-item" onclick="scrollToSection('atasSection')">Atas para carona</button>
-                <button class="nav-item" onclick="scrollToSection('checklistSection')">Checklist</button>
-                <button class="nav-item" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
+            <nav aria-label="Secoes do Icaro">
+                <button type="button" class="nav-item active" data-nav-target="pesquisaSection" onclick="scrollToSection('pesquisaSection')">Pesquisa</button>
+                <button type="button" class="nav-item" data-nav-target="itensSection" onclick="scrollToSection('itensSection')">Itens da cesta</button>
+                <button type="button" class="nav-item" data-nav-target="pncpSection" onclick="scrollToSection('pncpSection')">Busca PNCP</button>
+                <button type="button" class="nav-item" data-nav-target="fontesSection" onclick="scrollToSection('fontesSection')">Fontes e calculo</button>
+                <button type="button" class="nav-item" data-nav-target="atasSection" onclick="scrollToSection('atasSection')">Atas para carona</button>
+                <button type="button" class="nav-item" data-nav-target="checklistSection" onclick="scrollToSection('checklistSection')">Checklist</button>
+                <button type="button" class="nav-item" data-nav-target="relatoriosSection" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
             </nav>
             <div class="note">
-                Informe uma cesta de itens, vincule fontes do PNCP e gere relatorio de pesquisa de mercado.
+                Informe uma cesta de itens, busque contratacoes no PNCP com ordenacao por similaridade a descricao do item e vincule fontes com rastreabilidade.
             </div>
         </aside>
 
@@ -384,8 +579,9 @@
                 <div>
                     <p class="eyebrow">Icaro</p>
                     <h2>Cesta de precos por item</h2>
+                    <p class="contexto-atual" id="contextoAtual" aria-live="polite">Carregando contexto...</p>
                     <p class="lead">
-                        Cadastre ou importe itens, busque precos praticados em licitacoes existentes e consolide a origem dos valores para o relatorio de mercado.
+                        Fluxo: pesquisa ativa, cesta de itens, busca no PNCP com similaridade, lancamento de fontes com rastreio, atas opcionais e exportacao para o relatorio de mercado.
                     </p>
                 </div>
                 <div class="status" id="status">Pronto</div>
@@ -395,8 +591,13 @@
                 <article class="metric"><span>Pesquisas</span><strong id="m-processos">0</strong><small>Total cadastrado.</small></article>
                 <article class="metric"><span>Itens</span><strong id="m-itens">0</strong><small>Itens na cesta.</small></article>
                 <article class="metric"><span>Fontes usadas</span><strong id="m-fontes">0</strong><small>Amostras aproveitadas.</small></article>
-                <article class="metric"><span>Mediana</span><strong id="m-mediana">R$ 0</strong><small>Preco estimado sugerido.</small></article>
+                <article class="metric"><span>Mediana</span><strong id="m-mediana">R$ 0</strong><small>Na pesquisa ativa, com base nas fontes aproveitadas.</small></article>
             </section>
+
+            <div class="workflow-banner" role="region" aria-label="Fluxo sugerido no Icaro">
+                <strong>Fluxo sugerido:</strong>
+                escolha ou crie uma pesquisa na lista &rarr; cadastre itens (ou importe linhas) &rarr; use Busca PNCP (o botao PNCP ao lado de cada item preenche o formulario) &rarr; registre fontes e valores &rarr; atas, se for carona &rarr; checklist e relatorios.
+            </div>
 
             <section class="grid" id="pesquisaSection">
                 <div class="panel">
@@ -452,7 +653,7 @@
                             <span>Pesquisas</span>
                             <h3>Base atual</h3>
                         </div>
-                        <button onclick="carregarProcessos()">Atualizar</button>
+                        <button type="button" onclick="carregarProcessos()">Atualizar</button>
                     </div>
                     <div class="panel-body">
                         <div class="list" id="listaProcessos"></div>
@@ -514,19 +715,20 @@
                             <span>Cesta</span>
                             <h3>Itens pesquisados</h3>
                         </div>
-                        <button onclick="carregarProcessoSelecionado()">Atualizar</button>
+                        <button type="button" onclick="carregarProcessoSelecionado()">Atualizar</button>
                     </div>
                     <div class="panel-body">
                         <div class="list" id="listaItens"></div>
-                        <div class="actions">
-                            <textarea id="itensImportacao" class="wide" placeholder="Importe itens colando linhas no formato: codigo;descricao;unidade;quantidade;categoria"></textarea>
-                            <button onclick="importarItensTexto()">Importar linhas</button>
+                        <div class="import-block">
+                            <span class="form-hint">Importacao em lote: uma linha por item, formato <code>codigo;descricao;unidade;quantidade;categoria</code></span>
+                            <textarea id="itensImportacao" placeholder="001;papel A4 sulfite 75g;resma;10;consumo"></textarea>
+                            <button type="button" onclick="importarItensTexto()">Importar linhas</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="grid" style="margin-top: 14px;">
+            <section class="grid" id="fontesSection" style="margin-top: 14px;">
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -610,8 +812,8 @@
                             <h3>Fontes e calculo</h3>
                         </div>
                         <div class="actions">
-                            <button onclick="carregarProcessoSelecionado()">Recalcular</button>
-                            <button onclick="exportarXlsx()">Exportar XLSX</button>
+                            <button type="button" onclick="carregarProcessoSelecionado()">Recalcular</button>
+                            <button type="button" onclick="exportarXlsx()">Exportar XLSX</button>
                         </div>
                     </div>
                     <div class="table-wrap">
@@ -641,11 +843,22 @@
                         </div>
                     </div>
                     <div class="panel-body">
+                        <p class="form-hint" style="margin-bottom: 12px;">O termo alimenta a API do PNCP. O texto de referencia (em geral a descricao do item) define a <strong>similaridade lexical</strong> usada para ordenar os resultados e opcionalmente disparar buscas auxiliares com palavras-chave derivadas.</p>
                         <form id="pncpForm" onsubmit="buscarPncp(event)">
                             <div class="form-grid">
                                 <label class="wide">
-                                    <span>Termo de busca</span>
+                                    <span>Item da cesta (opcional)</span>
+                                    <select id="pncpItemContexto" onchange="aplicarContextoPncpDoItem(false)">
+                                        <option value="">Sem item (apenas termo manual)</option>
+                                    </select>
+                                </label>
+                                <label class="wide">
+                                    <span>Termo enviado ao PNCP</span>
                                     <input id="pncpTermo" placeholder="ex: notebook, limpeza predial, papel A4">
+                                </label>
+                                <label class="wide">
+                                    <span>Texto de referencia (descricao / especificacao para similaridade)</span>
+                                    <textarea id="pncpTextoReferencia" placeholder="Cole ou edite a descricao do item. Resultados serao ordenados pela proximidade ao texto."></textarea>
                                 </label>
                                 <label>
                                     <span>Data inicial</span>
@@ -655,9 +868,22 @@
                                     <span>Data final</span>
                                     <input id="pncpDataFinal" placeholder="AAAAMMDD">
                                 </label>
+                                <label>
+                                    <span>Resultados por consulta</span>
+                                    <input id="pncpTamanhoPagina" type="number" min="5" max="50" value="14">
+                                </label>
+                                <label>
+                                    <span>Consultas combinadas (max.)</span>
+                                    <input id="pncpMaxConsultas" type="number" min="1" max="6" value="4">
+                                </label>
+                                <label class="wide" style="display: flex; flex-direction: row; align-items: center; gap: 10px; min-height: 38px;">
+                                    <input id="pncpVariantes" type="checkbox" checked style="width: auto; min-height: auto;">
+                                    <span style="text-transform: none; font-weight: 600;">Incluir buscas auxiliares por palavras-chave da referencia</span>
+                                </label>
                             </div>
                             <div class="actions">
                                 <button class="primary" type="submit">Buscar PNCP</button>
+                                <button type="button" onclick="aplicarContextoPncpDoItem(true)">Preencher do item selecionado na lista</button>
                             </div>
                         </form>
                     </div>
@@ -670,15 +896,21 @@
                         </div>
                         <span class="badge" id="pncpResumoBadge">0 resultados</span>
                     </div>
+                    <div class="panel-body" style="padding-top: 0;">
+                        <p class="form-hint" id="pncpMetaHint" style="margin: 0 0 10px;"></p>
+                    </div>
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Similaridade</th>
                                     <th>Objeto</th>
                                     <th>Orgao</th>
                                     <th>Modalidade</th>
+                                    <th>Situacao</th>
                                     <th>Valor estimado</th>
                                     <th>Publicacao</th>
+                                    <th>Acao</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaPncp"></tbody>
@@ -770,7 +1002,7 @@
                             <span>Atas e caronas</span>
                             <h3>Analise inicial</h3>
                         </div>
-                        <button onclick="carregarProcessoSelecionado()">Atualizar</button>
+                        <button type="button" onclick="carregarProcessoSelecionado()">Atualizar</button>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -809,7 +1041,7 @@
                             <span>Comparabilidade</span>
                             <h3>Aderencia das fontes</h3>
                         </div>
-                        <button onclick="carregarProcessoSelecionado()">Atualizar</button>
+                        <button type="button" onclick="carregarProcessoSelecionado()">Atualizar</button>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -836,10 +1068,10 @@
                             <h3>Exportacoes do processo</h3>
                         </div>
                         <div class="actions">
-                            <button onclick="exportarRelatorioMd()">Relatorio MD</button>
-                            <button onclick="exportarRelatorioDocx()">DOCX</button>
-                            <button onclick="exportarRelatorioHtml()">PDF/Impressao</button>
-                            <button onclick="exportarXlsx()">Exportar XLSX</button>
+                            <button type="button" onclick="exportarRelatorioMd()">Relatorio MD</button>
+                            <button type="button" onclick="exportarRelatorioDocx()">DOCX</button>
+                            <button type="button" onclick="exportarRelatorioHtml()">PDF/Impressao</button>
+                            <button type="button" onclick="exportarXlsx()">Exportar XLSX</button>
                         </div>
                     </div>
                     <div class="panel-body">
@@ -856,6 +1088,86 @@
         let itens = [];
         let processoSelecionado = null;
         let itemSelecionado = null;
+        let resumoItensCache = [];
+        let ultimosResultadosPncp = [];
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function truncarParaBusca(texto, maxPalavras) {
+            const partes = String(texto || '').trim().split(/\s+/).filter(Boolean);
+            return partes.slice(0, maxPalavras).join(' ');
+        }
+
+        function sincronizarPncpItemSelect() {
+            const sel = document.getElementById('pncpItemContexto');
+            if (!sel) return;
+            const keep = sel.value;
+            sel.innerHTML = '<option value="">Sem item (apenas termo manual)</option>';
+            itens.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = String(item.id);
+                const short = item.descricao.length > 72 ? item.descricao.slice(0, 72) + '...' : item.descricao;
+                opt.textContent = (item.codigo ? item.codigo + ' — ' : '') + short;
+                sel.appendChild(opt);
+            });
+            if (keep && [...sel.options].some(o => o.value === keep)) {
+                sel.value = keep;
+            } else if (itemSelecionado) {
+                sel.value = String(itemSelecionado);
+            }
+        }
+
+        function aplicarContextoPncpDoItem(forcarDaListaCesta) {
+            const sel = document.getElementById('pncpItemContexto');
+            if (!sel) return;
+            let id = Number(sel.value || 0);
+            if (forcarDaListaCesta && itemSelecionado) {
+                id = itemSelecionado;
+                sel.value = String(itemSelecionado);
+            }
+            if (!id) return;
+            const item = itens.find(i => i.id === id);
+            if (!item) return;
+            itemSelecionado = item.id;
+            const termo = (item.termo_busca || '').trim() || truncarParaBusca(item.descricao, 14);
+            document.getElementById('pncpTermo').value = termo;
+            document.getElementById('pncpTextoReferencia').value = [item.descricao, item.especificacao].filter(Boolean).join('\n\n');
+            renderItens(resumoItensCache);
+            atualizarSelectItens();
+            sincronizarPncpItemSelect();
+            setStatus('Campos PNCP preenchidos a partir do item.');
+        }
+
+        function prepararBuscaPncpItem(id) {
+            itemSelecionado = id;
+            const sel = document.getElementById('pncpItemContexto');
+            if (sel) sel.value = String(id);
+            aplicarContextoPncpDoItem(false);
+            scrollToSection('pncpSection');
+            setStatus('Revise o termo e a referencia e clique em Buscar PNCP.');
+        }
+
+        function preencherFonteDoPncp(idx) {
+            const item = ultimosResultadosPncp[idx];
+            if (!item) return;
+            document.getElementById('fonteTipo').value = 'pncp';
+            document.getElementById('descricaoItem').value = item.objeto || '';
+            document.getElementById('orgao').value = (item.orgao || item.unidade || '').trim();
+            document.getElementById('urlFonte').value = item.url || '';
+            const v = Number(item.valor_estimado || 0);
+            document.getElementById('valorUnitario').value = v > 0 ? String(v) : '';
+            document.getElementById('aproveitada').value = 'true';
+            const fid = document.getElementById('fonteItemId');
+            if (fid && itemSelecionado) fid.value = String(itemSelecionado);
+            scrollToSection('fontesSection');
+            setStatus('Revise o valor unitario antes de gravar (o PNCP costuma trazer valor total estimado da contratacao).');
+        }
 
         function setStatus(message) {
             document.getElementById('status').textContent = message;
@@ -863,6 +1175,25 @@
 
         function scrollToSection(id) {
             document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('aside nav .nav-item').forEach(btn => {
+                const target = btn.getAttribute('data-nav-target');
+                if (target) {
+                    btn.classList.toggle('active', target === id);
+                }
+            });
+        }
+
+        function atualizarContextoCabecalho() {
+            const el = document.getElementById('contextoAtual');
+            if (!el) return;
+            if (!processoSelecionado) {
+                el.textContent = 'Nenhuma pesquisa selecionada. Crie uma pesquisa ou escolha uma na lista.';
+                return;
+            }
+            const p = processos.find(x => Number(x.id) === Number(processoSelecionado));
+            el.textContent = p
+                ? `Pesquisa ativa: ${p.titulo}`
+                : `Pesquisa ativa (#${processoSelecionado}).`;
         }
 
         async function api(url, options = {}) {
@@ -903,7 +1234,9 @@
             limparProcesso();
             await carregarProcessos();
             await carregarProcessoSelecionado();
+            atualizarContextoCabecalho();
             setStatus('Processo criado');
+            scrollToSection('itensSection');
         }
 
         async function carregarProcessos() {
@@ -923,7 +1256,7 @@
                     await carregarProcessos();
                     await carregarProcessoSelecionado();
                 };
-                button.innerHTML = `<strong>${proc.titulo}</strong><small>${proc.descricao_objeto}</small>`;
+                button.innerHTML = `<strong>${escapeHtml(proc.titulo)}</strong><small>${escapeHtml(proc.descricao_objeto)}</small>`;
                 lista.appendChild(button);
             });
             if (!processos.length) {
@@ -932,6 +1265,7 @@
             if (!processoSelecionado && processos.length) {
                 processoSelecionado = processos[0].id;
             }
+            atualizarContextoCabecalho();
         }
 
         async function carregarProcessoSelecionado() {
@@ -946,6 +1280,10 @@
                 document.getElementById('checklistResumoBadge').textContent = '0/0';
                 document.getElementById('listaChecklist').innerHTML = '<p>Selecione ou crie um processo.</p>';
                 document.getElementById('tabelaComparabilidade').innerHTML = '<tr><td colspan="5">Selecione ou crie um processo.</td></tr>';
+                resumoItensCache = [];
+                const pncpSel = document.getElementById('pncpItemContexto');
+                if (pncpSel) pncpSel.innerHTML = '<option value="">Sem item (apenas termo manual)</option>';
+                atualizarContextoCabecalho();
                 return;
             }
             const res = await api(`/processos/${processoSelecionado}`);
@@ -958,12 +1296,15 @@
             document.getElementById('m-itens').textContent = itens.length;
             atualizarResumo(data.resumo);
             atualizarResumoAtas(data.resumo_atas);
-            renderItens(data.resumo_itens || []);
+            resumoItensCache = data.resumo_itens || [];
+            renderItens(resumoItensCache);
             atualizarSelectItens();
+            sincronizarPncpItemSelect();
             renderFontes(data.fontes);
             renderAtas(data.atas);
             await carregarChecklist();
             await carregarComparabilidade();
+            atualizarContextoCabecalho();
         }
 
         function atualizarResumo(resumo) {
@@ -991,11 +1332,11 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><span class="badge ${item.aproveitada ? 'green' : 'amber'}">${item.aproveitada ? 'Usada' : 'Descartada'}</span></td>
-                    <td>${item.fonte_tipo}</td>
-                    <td>${item.descricao_item}</td>
+                    <td>${escapeHtml(item.fonte_tipo)}</td>
+                    <td>${escapeHtml(item.descricao_item)}</td>
                     <td>${fmtMoney.format(Number(item.valor_unitario || 0))}</td>
-                    <td>${item.orgao || '-'}</td>
-                    <td><button class="danger" onclick="excluirFonte(${item.id})">Excluir</button></td>
+                    <td>${escapeHtml(item.orgao || '-')}</td>
+                    <td><button type="button" class="danger" onclick="excluirFonte(${item.id})">Excluir</button></td>
                 `;
                 tabela.appendChild(row);
             });
@@ -1015,6 +1356,8 @@
             });
             itens.forEach(item => {
                 const resumo = resumoPorId[item.id] || {};
+                const wrap = document.createElement('div');
+                wrap.className = 'cesta-item-wrap';
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = `processo-item ${item.id === itemSelecionado ? 'active' : ''}`;
@@ -1022,9 +1365,21 @@
                     itemSelecionado = item.id;
                     renderItens(resumoItens);
                     atualizarSelectItens();
+                    sincronizarPncpItemSelect();
                 };
-                button.innerHTML = `<strong>${item.codigo ? item.codigo + ' - ' : ''}${item.descricao}</strong><small>${item.quantidade || 1} ${item.unidade || ''} | ${resumo.fontes_aproveitadas || 0} fontes | mediana ${resumo.preco_estimado_mediana ? fmtMoney.format(resumo.preco_estimado_mediana) : '-'}</small>`;
-                lista.appendChild(button);
+                button.innerHTML = `<strong>${escapeHtml(item.codigo ? item.codigo + ' - ' : '')}${escapeHtml(item.descricao)}</strong><small>${escapeHtml(String(item.quantidade || 1))} ${escapeHtml(item.unidade || '')} | ${resumo.fontes_aproveitadas || 0} fontes | mediana ${resumo.preco_estimado_mediana ? fmtMoney.format(resumo.preco_estimado_mediana) : '-'}</small>`;
+                const pncpBtn = document.createElement('button');
+                pncpBtn.type = 'button';
+                pncpBtn.className = 'btn-compact';
+                pncpBtn.textContent = 'PNCP';
+                pncpBtn.title = 'Abrir busca PNCP com descricao deste item';
+                pncpBtn.onclick = (e) => {
+                    e.preventDefault();
+                    prepararBuscaPncpItem(item.id);
+                };
+                wrap.appendChild(button);
+                wrap.appendChild(pncpBtn);
+                lista.appendChild(wrap);
             });
             const atual = itens.find(item => item.id === itemSelecionado);
             document.getElementById('itemSelecionadoBadge').textContent = atual ? `Item #${atual.id}` : 'Nenhum item';
@@ -1053,12 +1408,12 @@
                 const row = document.createElement('tr');
                 const aderenciaClass = item.aderencia === 'alta' || item.aderencia === 'media' ? 'green' : item.aderencia === 'baixa' ? 'amber' : '';
                 row.innerHTML = `
-                    <td><span class="badge ${aderenciaClass}">${item.aderencia || 'indefinida'}</span></td>
-                    <td><strong>${item.numero || '-'}</strong><br><small>${item.orgao_gerenciador || '-'}</small></td>
-                    <td>${item.objeto || '-'}<br><small>${item.item || ''}</small></td>
+                    <td><span class="badge ${aderenciaClass}">${escapeHtml(item.aderencia || 'indefinida')}</span></td>
+                    <td><strong>${escapeHtml(item.numero || '-')}</strong><br><small>${escapeHtml(item.orgao_gerenciador || '-')}</small></td>
+                    <td>${escapeHtml(item.objeto || '-')}<br><small>${escapeHtml(item.item || '')}</small></td>
                     <td>${fmtMoney.format(Number(item.valor_unitario || 0))}</td>
-                    <td>${item.vigencia_inicio || '-'} a ${item.vigencia_fim || '-'}</td>
-                    <td><button class="danger" onclick="excluirAta(${item.id})">Excluir</button></td>
+                    <td>${escapeHtml(item.vigencia_inicio || '-')} a ${escapeHtml(item.vigencia_fim || '-')}</td>
+                    <td><button type="button" class="danger" onclick="excluirAta(${item.id})">Excluir</button></td>
                 `;
                 tabela.appendChild(row);
             });
@@ -1073,7 +1428,7 @@
             data.checklist.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'processo-item';
-                div.innerHTML = `<strong>${item.ok ? 'OK' : 'Pendente'} - ${item.titulo}</strong><small>${item.grupo} | ${item.detalhe}</small>`;
+                div.innerHTML = `<strong>${escapeHtml(item.ok ? 'OK' : 'Pendente')} - ${escapeHtml(item.titulo)}</strong><small>${escapeHtml(item.grupo)} | ${escapeHtml(item.detalhe)}</small>`;
                 lista.appendChild(div);
             });
         }
@@ -1092,11 +1447,11 @@
                 const badgeClass = item.classificacao === 'alta' ? 'green' : item.classificacao === 'media' ? '' : 'amber';
                 const desvio = item.desvio_percentual_mediana === null ? '-' : `${item.desvio_percentual_mediana}%`;
                 row.innerHTML = `
-                    <td><span class="badge ${badgeClass}">${item.classificacao}</span></td>
-                    <td>${item.descricao_item || '-'}</td>
-                    <td>${item.score}</td>
-                    <td>${item.similaridade_objeto}</td>
-                    <td>${desvio}</td>
+                    <td><span class="badge ${badgeClass}">${escapeHtml(item.classificacao)}</span></td>
+                    <td>${escapeHtml(item.descricao_item || '-')}</td>
+                    <td>${escapeHtml(String(item.score))}</td>
+                    <td>${escapeHtml(String(item.similaridade_objeto))}</td>
+                    <td>${escapeHtml(desvio)}</td>
                 `;
                 tabela.appendChild(row);
             });
@@ -1104,21 +1459,95 @@
 
         async function buscarPncp(event) {
             event.preventDefault();
+            const sel = document.getElementById('pncpItemContexto');
+            const itemIdVal = sel && sel.value ? Number(sel.value) : null;
             const payload = {
                 termo: document.getElementById('pncpTermo').value.trim(),
+                texto_referencia: document.getElementById('pncpTextoReferencia').value.trim(),
+                item_id: itemIdVal || null,
                 data_inicial: document.getElementById('pncpDataInicial').value.trim(),
                 data_final: document.getElementById('pncpDataFinal').value.trim(),
-                tamanho_pagina: 10
+                tamanho_pagina: Number(document.getElementById('pncpTamanhoPagina').value || 14),
+                buscar_variantes: document.getElementById('pncpVariantes').checked,
+                max_consultas: Number(document.getElementById('pncpMaxConsultas').value || 4)
             };
             setStatus('Consultando PNCP...');
-            const res = await api('/pncp/buscar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            try {
+                const res = await fetch('/pncp/buscar-contexto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    const detail = data.detail;
+                    const msg = typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map(d => d.msg || d).join('; ') : JSON.stringify(detail || data);
+                    renderPncp({ ok: false, erro: msg || `HTTP ${res.status}`, resultados: [] });
+                    setStatus('Nao foi possivel concluir a busca');
+                    return;
+                }
+                renderPncp(data);
+                setStatus(data.ok ? 'Consulta PNCP concluida' : (data.erro || 'PNCP indisponivel'));
+            } catch (err) {
+                renderPncp({ ok: false, erro: err.message, resultados: [] });
+                setStatus(`Erro: ${err.message}`);
+            }
+        }
+
+        function renderPncp(data) {
+            const tabela = document.getElementById('tabelaPncp');
+            const hint = document.getElementById('pncpMetaHint');
+            tabela.innerHTML = '';
+            const resultados = data.resultados || [];
+            ultimosResultadosPncp = resultados;
+            const unicos = data.total_unicos != null ? data.total_unicos : resultados.length;
+            document.getElementById('pncpResumoBadge').textContent = `${unicos} resultados unicos`;
+
+            if (hint) {
+                if (data.ok && data.consultas && data.consultas.length) {
+                    const ref = (data.texto_referencia || '').trim();
+                    const refShort = ref.length > 160 ? ref.slice(0, 160) + '...' : ref;
+                    let line = `Consultas: ${data.consultas.join(' | ')}. Referencia: ${refShort || '(termo)'}`;
+                    if (data.erros_parciais && data.erros_parciais.length) {
+                        line += ` | Alerta: ${data.erros_parciais[0]}`;
+                    }
+                    hint.textContent = line;
+                } else if (!data.ok && data.erro) {
+                    hint.textContent = data.erro;
+                } else {
+                    hint.textContent = '';
+                }
+            }
+
+            if (!data.ok) {
+                tabela.innerHTML = `<tr><td colspan="8">${escapeHtml(data.erro || 'Erro desconhecido')}</td></tr>`;
+                return;
+            }
+            if (!resultados.length) {
+                tabela.innerHTML = '<tr><td colspan="8">Nenhum resultado encontrado.</td></tr>';
+                return;
+            }
+
+            resultados.forEach((item, idx) => {
+                const pct = item.similaridade_pct != null
+                    ? Number(item.similaridade_pct)
+                    : Math.round(Number(item.similaridade || 0) * 1000) / 10;
+                let badgeClass = 'amber';
+                if (pct >= 35) badgeClass = 'green';
+                else if (pct >= 15) badgeClass = '';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="badge ${badgeClass} sim-badge">${pct}%</span></td>
+                    <td>${escapeHtml(item.objeto || '-')}</td>
+                    <td>${escapeHtml(item.orgao || item.unidade || '-')}</td>
+                    <td>${escapeHtml(item.modalidade || '-')}</td>
+                    <td>${escapeHtml(item.situacao || '-')}</td>
+                    <td>${fmtMoney.format(Number(item.valor_estimado || 0))}</td>
+                    <td>${escapeHtml(item.data_publicacao || '-')}</td>
+                    <td><button type="button" onclick="preencherFonteDoPncp(${idx})">Rascunho fonte</button></td>
+                `;
+                tabela.appendChild(row);
             });
-            const data = await res.json();
-            renderPncp(data);
-            setStatus(data.ok ? 'Consulta PNCP concluida' : 'PNCP indisponivel');
         }
 
         async function criarItem(event) {
@@ -1186,31 +1615,6 @@
             setStatus('Itens importados');
         }
 
-        function renderPncp(data) {
-            const tabela = document.getElementById('tabelaPncp');
-            tabela.innerHTML = '';
-            const resultados = data.resultados || [];
-            document.getElementById('pncpResumoBadge').textContent = `${resultados.length} resultados`;
-            if (!data.ok) {
-                tabela.innerHTML = `<tr><td colspan="5">${data.erro}</td></tr>`;
-                return;
-            }
-            if (!resultados.length) {
-                tabela.innerHTML = '<tr><td colspan="5">Nenhum resultado encontrado.</td></tr>';
-                return;
-            }
-            resultados.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.objeto || '-'}</td>
-                    <td>${item.orgao || item.unidade || '-'}</td>
-                    <td>${item.modalidade || '-'}</td>
-                    <td>${fmtMoney.format(Number(item.valor_estimado || 0))}</td>
-                    <td>${item.data_publicacao || '-'}</td>
-                `;
-                tabela.appendChild(row);
-            });
-        }
 
         async function criarFonte(event) {
             event.preventDefault();

@@ -33,12 +33,13 @@ from src.db import (
     resumo_itens,
     resumo_pesquisa,
 )
-from src.pncp import buscar_contratacoes
+from src.pncp import buscar_contratacoes, buscar_contratacoes_contextual
 from src.reports import gerar_relatorio_docx, gerar_relatorio_html, gerar_relatorio_markdown, gerar_xlsx_processo
 
 
 app = FastAPI(title="Icaro")
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "assets"), name="assets")
+app.mount("/icaro-docs", StaticFiles(directory=BASE_DIR / "docs"), name="icaro_docs")
 
 
 class ProcessoRequest(BaseModel):
@@ -97,6 +98,19 @@ class PncpBuscaRequest(BaseModel):
     tamanho_pagina: int = 10
 
 
+class PncpContextoBuscaRequest(BaseModel):
+    """Busca no PNCP com texto de referencia para ordenar por similaridade ao item."""
+
+    termo: str = ""
+    texto_referencia: str = ""
+    item_id: int | None = None
+    data_inicial: str = ""
+    data_final: str = ""
+    tamanho_pagina: int = 14
+    buscar_variantes: bool = True
+    max_consultas: int = 4
+
+
 class ItemPesquisaRequest(BaseModel):
     processo_id: int
     codigo: str = ""
@@ -132,7 +146,12 @@ def startup() -> None:
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard() -> str:
-    return open("dashboard.html", encoding="utf-8").read()
+    return (BASE_DIR / "dashboard.html").read_text(encoding="utf-8")
+
+
+@app.get("/atlasnex", response_class=HTMLResponse)
+def atlasnex_hub() -> str:
+    return (BASE_DIR / "atlasnex-dashboard.html").read_text(encoding="utf-8")
 
 
 @app.get("/health")
@@ -292,6 +311,46 @@ def pncp_buscar(req: PncpBuscaRequest) -> dict[str, Any]:
         data_final=req.data_final or None,
         pagina=req.pagina,
         tamanho_pagina=req.tamanho_pagina,
+    )
+
+
+@app.post("/pncp/buscar-contexto")
+def pncp_buscar_contexto(req: PncpContextoBuscaRequest) -> dict[str, Any]:
+    texto_ref = req.texto_referencia.strip()
+    termo = req.termo.strip()
+
+    if req.item_id is not None:
+        item = get_item(req.item_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="Item nao encontrado")
+        partes_ref = [
+            str(item.get("descricao") or "").strip(),
+            str(item.get("especificacao") or "").strip(),
+            str(item.get("termo_busca") or "").strip(),
+        ]
+        if not texto_ref:
+            texto_ref = " ".join(p for p in partes_ref if p).strip()
+        if not termo:
+            termo = (str(item.get("termo_busca") or "").strip()) or (
+                str(item.get("descricao") or "").strip()[:200]
+            )
+
+    if not termo and not texto_ref:
+        raise HTTPException(
+            status_code=400,
+            detail="Informe termo, texto de referencia ou item_id",
+        )
+    if not texto_ref:
+        texto_ref = termo
+
+    return buscar_contratacoes_contextual(
+        termo=termo or texto_ref,
+        texto_referencia=texto_ref,
+        data_inicial=req.data_inicial or None,
+        data_final=req.data_final or None,
+        tamanho_pagina=req.tamanho_pagina,
+        buscar_variantes=req.buscar_variantes,
+        max_consultas=req.max_consultas,
     )
 
 

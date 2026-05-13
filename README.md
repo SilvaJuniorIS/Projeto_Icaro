@@ -48,7 +48,13 @@ Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa d
 
 ## Estado atual
 
-MVP local inicial. Ja existem API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, consulta inicial ao PNCP e exportacoes MD/HTML/DOCX/XLSX.
+MVP local inicial. Ja existem API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, consulta contextual ao PNCP e exportacoes MD/HTML/DOCX/XLSX. O **hub AtlasNex** (`/atlasnex`) agrega links ao Icaro e ao Hermes sem unificar backends.
+
+## AtlasNex (portal do ecossistema)
+
+- URL: `http://127.0.0.1:8100/atlasnex`
+- Cartoes para **Icaro** (abrir em nova aba ou iframe na mesma origem) e **Hermes** (ativado ao salvar a URL em **Integracao**).
+- Manual do usuario: `http://127.0.0.1:8100/icaro-docs/MANUAL_ICARO.md` ou ficheiro `docs/MANUAL_ICARO.md`.
 
 ## Como executar
 
@@ -71,18 +77,24 @@ Depois acesse:
 
 ```text
 http://127.0.0.1:8100
+http://127.0.0.1:8100/atlasnex
 ```
 
 ## Estrutura
 
 ```text
 Icaro/
+  assets/
+    atlasnex-mark.svg
+    icaro-logo.svg
   config/
   data/
   docs/
+    MANUAL_ICARO.md
   output/
   src/
   api.py
+  atlasnex-dashboard.html
   dashboard.html
   requirements.txt
   INICIAR_ICARO.bat

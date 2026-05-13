@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AtlasNex — Ecossistema</title>
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --surface: #14161c;
+            --surface-2: #1c2028;
+            --line: #2a3038;
+            --ink: #f2f4f7;
+            --muted: #9aa3ad;
+            --orange: #ff8c00;
+            --gold: #ffc14d;
+            --orange-dim: #8a4a00;
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+        }
+        .app {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+        aside {
+            background: linear-gradient(180deg, #0d0d10 0%, #12141a 100%);
+            border-right: 1px solid var(--line);
+            padding: 22px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .brand {
+            display: grid;
+            gap: 10px;
+        }
+        .brand img { width: 100%; max-width: 220px; height: auto; display: block; }
+        .brand p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+        nav { display: grid; gap: 6px; }
+        .nav-item {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 10px 12px;
+            text-align: left;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, background 0.15s;
+        }
+        .nav-item:hover {
+            color: var(--ink);
+            background: var(--surface-2);
+            border-color: var(--line);
+        }
+        .nav-item.active {
+            color: var(--bg);
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            border-color: var(--gold);
+        }
+        .aside-foot {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.45;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+        main {
+            padding: 28px 32px 48px;
+            min-width: 0;
+        }
+        .top {
+            margin-bottom: 28px;
+        }
+        .eyebrow {
+            margin: 0 0 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--orange);
+        }
+        h1 { margin: 0; font-size: 28px; font-weight: 800; }
+        .lead {
+            margin: 10px 0 0;
+            max-width: 720px;
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        .panels { display: none; }
+        .panels.visible { display: block; }
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .card h2 {
+            margin: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tag {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            color: var(--gold);
+            border: 1px solid var(--line);
+        }
+        .tag.live { background: rgba(255, 140, 0, 0.15); color: var(--gold); border-color: var(--orange-dim); }
+        .tagSoon { opacity: 0.85; }
+        .card p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.5;
+            flex: 1;
+        }
+        .card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        button, .btn-link {
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 10px 14px;
+            border: 1px solid var(--line);
+            font-family: inherit;
+        }
+        button.primary {
+            background: linear-gradient(135deg, var(--orange), #e67300);
+            color: #0a0a0c;
+            border-color: var(--gold);
+        }
+        button.primary:hover { filter: brightness(1.06); }
+        button.secondary {
+            background: var(--surface-2);
+            color: var(--ink);
+        }
+        button.secondary:hover { border-color: var(--orange); color: var(--gold); }
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .config {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 640px;
+        }
+        .config h3 { margin: 0 0 14px; font-size: 16px; }
+        .config label {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .config input {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            color: var(--ink);
+            font-size: 14px;
+        }
+        .embed-wrap {
+            margin-top: 24px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .embed-wrap.visible { display: flex; }
+        .embed-wrap span { font-size: 12px; color: var(--muted); }
+        .embed-frame {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            min-height: 70vh;
+        }
+        .embed-frame iframe {
+            width: 100%;
+            height: 70vh;
+            border: 0;
+        }
+        a.doc-link {
+            color: var(--gold);
+            font-weight: 600;
+        }
+        @media (max-width: 900px) {
+            .app { grid-template-columns: 1fr; }
+            aside {
+                flex-direction: row;
+                flex-wrap: wrap;
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+            nav { display: flex; flex-wrap: wrap; width: 100%; }
+            .nav-item { flex: 1 1 42%; }
+            .aside-foot { width: 100%; }
+            main { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside>
+            <div class="brand">
+                <img src="/assets/atlasnex-mark.svg" alt="AtlasNex">
+                <p>Portal unificado do ecossistema. Cada ferramenta continua em processo e URL proprios.</p>
+            </div>
+            <nav aria-label="Navegacao principal">
+                <button type="button" class="nav-item active" data-panel="visao">Visao geral</button>
+                <button type="button" class="nav-item" data-panel="ferramentas">Ferramentas</button>
+                <button type="button" class="nav-item" data-panel="integracao">Integracao</button>
+            </nav>
+            <div class="aside-foot">
+                Modo atual: sistemas separados. Configure as URLs abaixo para apontar para cada instancia (rede local ou servidor).
+            </div>
+        </aside>
+        <main>
+            <header class="top">
+                <p class="eyebrow">AtlasNex</p>
+                <h1>Ecossistema de apoio a compras e contratacoes</h1>
+                <p class="lead">
+                    Este painel centraliza o acesso ao <strong>Icaro</strong> (pesquisa de mercado e PNCP) e reserva lugar para o <strong>Hermes</strong> e demais modulos.
+                    O Icaro nao e embutido no mesmo banco de dados do AtlasNex: a integracao e por navegacao e referencia, ate decisao de unificar backends.
+                </p>
+            </header>
+
+            <div id="panel-visao" class="panels visible">
+                <div class="grid-cards">
+                    <article class="card">
+                        <h2>Icaro <span class="tag live">Disponivel</span></h2>
+                        <p>Pesquisa de mercado por cesta de itens, busca contextual no PNCP com similaridade, fontes, atas, checklist e relatorios (MD, HTML, DOCX, XLSX).</p>
+                        <div class="card-actions">
+                            <button type="button" class="primary" id="btnIcaroNovaAba">Abrir Icaro (nova aba)</button>
+                            <button type="button" class="secondary" id="btnIcaroEmbed" hidden>Ver aqui (iframe)</button>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <h2>Hermes <span class="tag" id="hermesTag">Configure a URL</span></h2>
+                        <p>Espaco reservado para o Hermes no mesmo padrao de portal (logistica, expediente ou outro escopo definido pelo AtlasNex). Mantenha a URL do Hermes na secao Integracao.</p>
+                        <div class="card-actions">
+                            <button type="button" class="primary" id="btnHermesNovaAba" disabled>Abrir Hermes</button>
+                        </div>
+                    </article>
+                </div>
+                <p class="lead" style="font-size: 13px;">
+                    Manual do usuario:
+                    <a class="doc-link" href="/icaro-docs/MANUAL_ICARO.md" target="_blank" rel="noopener">MANUAL_ICARO.md</a>
+                    (servido por este mesmo host em <code>/icaro-docs/</code>).
+                </p>
+            </div>
+
+            <div id="panel-ferramentas" class="panels">
+                <p class="lead" style="font-size: 14px; margin-bottom: 16px;">
+                    Abra o Icaro em nova aba a partir da <strong>Visao geral</strong> ou use o iframe aqui quando a URL do Icaro for da <strong>mesma origem</strong> deste portal (proxy com mesmo dominio e porta).
+                </p>
+                <div class="embed-wrap" id="embedHost">
+                    <span id="embedHint">Visualizacao embutida do Icaro (somente quando a URL base e a mesma origem deste portal).</span>
+                    <div class="embed-frame">
+                        <iframe id="icaroFrame" title="Icaro" src="about:blank"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-integracao" class="panels">
+                <div class="config">
+                    <h3>URLs dos sistemas (gravadas neste navegador)</h3>
+                    <label>URL base do Icaro
+                        <input type="url" id="cfgIcaro" autocomplete="url" placeholder="http://127.0.0.1:8100">
+                    </label>
+                    <label>URL base do Hermes
+                        <input type="url" id="cfgHermes" autocomplete="url" placeholder="https://hermes.exemplo.gov.br">
+                    </label>
+                    <div class="card-actions">
+                        <button type="button" class="primary" id="btnSalvarUrls">Salvar</button>
+                        <button type="button" class="secondary" id="btnResetUrls">Restaurar padroes</button>
+                    </div>
+                </div>
+                <p class="lead" style="margin-top: 18px; font-size: 13px;">
+                    Para servir Icaro e AtlasNex sob o mesmo host (iframe sem bloqueio), use um reverse proxy
+                    (por exemplo <code>/icaro</code> e <code>/atlasnex</code>) com o mesmo esquema e dominio.
+                </p>
+            </div>
+        </main>
+    </div>
+    <script>
+        const LS_ICARO = 'atlasnex_icaro_url';
+        const LS_HERMES = 'atlasnex_hermes_url';
+
+        function defaultIcaro() {
+            const { protocol, hostname, port, pathname } = window.location;
+            if (pathname.includes('atlasnex')) {
+                const p = port ? `:${port}` : '';
+                return `${protocol}//${hostname}${p}/`.replace(/\/+$/, '/');
+            }
+            return 'http://127.0.0.1:8100';
+        }
+
+        function loadUrls() {
+            let icaro = localStorage.getItem(LS_ICARO);
+            if (!icaro) {
+                icaro = defaultIcaro();
+            }
+            const hermes = localStorage.getItem(LS_HERMES) || '';
+            document.getElementById('cfgIcaro').value = icaro;
+            document.getElementById('cfgHermes').value = hermes;
+            return { icaro, hermes };
+        }
+
+        function sameOrigin(urlStr) {
+            try {
+                return new URL(urlStr).origin === window.location.origin;
+            } catch {
+                return false;
+            }
+        }
+
+        function refreshEmbedUi() {
+            const { icaro } = loadUrls();
+            const embedBtn = document.getElementById('btnIcaroEmbed');
+            const hint = document.getElementById('embedHint');
+            if (sameOrigin(icaro)) {
+                embedBtn.hidden = false;
+                hint.textContent = 'Mesma origem detectada: voce pode usar o iframe abaixo sem bloqueio de navegador.';
+            } else {
+                embedBtn.hidden = true;
+                hint.textContent = 'URL do Icaro em outra origem: use "Abrir Icaro (nova aba)" ou alinhe host/porta via proxy.';
+                document.getElementById('embedHost').classList.remove('visible');
+                document.getElementById('icaroFrame').src = 'about:blank';
+            }
+        }
+
+        function salvarUrls() {
+            const icaro = document.getElementById('cfgIcaro').value.trim() || defaultIcaro();
+            const hermes = document.getElementById('cfgHermes').value.trim();
+            localStorage.setItem(LS_ICARO, icaro.replace(/\/$/, ''));
+            localStorage.setItem(LS_HERMES, hermes.replace(/\/$/, ''));
+            refreshEmbedUi();
+            syncHermesButton();
+            alert('URLs salvas neste navegador.');
+        }
+
+        function resetUrls() {
+            localStorage.removeItem(LS_ICARO);
+            localStorage.removeItem(LS_HERMES);
+            document.getElementById('cfgIcaro').value = defaultIcaro();
+            document.getElementById('cfgHermes').value = '';
+            refreshEmbedUi();
+            syncHermesButton();
+        }
+
+        function icaroHome() {
+            const v = document.getElementById('cfgIcaro').value.trim() || defaultIcaro();
+            return v.replace(/\/$/, '') + '/';
+        }
+
+        function hermesHome() {
+            const v = document.getElementById('cfgHermes').value.trim();
+            return v ? v.replace(/\/$/, '') + '/' : '';
+        }
+
+        function syncHermesButton() {
+            const btn = document.getElementById('btnHermesNovaAba');
+            const tag = document.getElementById('hermesTag');
+            const url = document.getElementById('cfgHermes').value.trim();
+            btn.disabled = !url;
+            if (tag) {
+                tag.textContent = url ? 'URL configurada' : 'Configure a URL';
+                tag.classList.toggle('live', !!url);
+            }
+        }
+
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const id = btn.getAttribute('data-panel');
+                document.querySelectorAll('.panels').forEach(p => p.classList.remove('visible'));
+                document.getElementById('panel-' + id).classList.add('visible');
+            });
+        });
+
+        document.getElementById('btnIcaroNovaAba').addEventListener('click', () => {
+            window.open(icaroHome(), '_blank', 'noopener,noreferrer');
+        });
+
+        document.getElementById('btnHermesNovaAba').addEventListener('click', () => {
+            const u = hermesHome();
+            if (u) window.open(u, '_blank', 'noopener,noreferrer');
+        });
+
+        document.getElementById('btnIcaroEmbed').addEventListener('click', () => {
+            document.getElementById('embedHost').classList.add('visible');
+            document.getElementById('icaroFrame').src = icaroHome();
+            document.querySelector('[data-panel="ferramentas"]').click();
+        });
+
+        document.getElementById('btnSalvarUrls').addEventListener('click', salvarUrls);
+        document.getElementById('btnResetUrls').addEventListener('click', resetUrls);
+
+        loadUrls();
+        refreshEmbedUi();
+        syncHermesButton();
+    </script>
+</body>
+</html>
