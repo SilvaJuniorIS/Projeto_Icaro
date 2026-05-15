@@ -1,21 +1,14 @@
 from __future__ import annotations
 
-import re
 from statistics import median
 from typing import Any
 
-
-def _tokens(text: str) -> set[str]:
-    return {
-        token
-        for token in re.findall(r"[a-z0-9]+", text.lower())
-        if len(token) >= 3
-    }
+from src.text_utils import tokens_texto
 
 
 def _similaridade(a: str, b: str) -> float:
-    tokens_a = _tokens(a)
-    tokens_b = _tokens(b)
+    tokens_a = tokens_texto(a)
+    tokens_b = tokens_texto(b)
     if not tokens_a or not tokens_b:
         return 0.0
     return len(tokens_a & tokens_b) / len(tokens_a | tokens_b)

@@ -6,6 +6,8 @@ from typing import Any
 
 import requests
 
+from src.text_utils import palavras_texto, tokens_texto
+
 
 BASE_URL = "https://pncp.gov.br/api/consulta"
 
@@ -88,6 +90,22 @@ def _palavras_significativas(texto: str, limite: int = 14) -> list[str]:
             continue
         if p not in saida:
             saida.append(p)
+        if len(saida) >= limite:
+            break
+    return saida
+
+
+def _tokens(texto: str) -> set[str]:  # type: ignore[no-redef]
+    return tokens_texto(texto)
+
+
+def _palavras_significativas(texto: str, limite: int = 14) -> list[str]:  # type: ignore[no-redef]
+    saida: list[str] = []
+    for palavra in palavras_texto(texto):
+        if palavra in _STOPWORDS_PT:
+            continue
+        if palavra not in saida:
+            saida.append(palavra)
         if len(saida) >= limite:
             break
     return saida

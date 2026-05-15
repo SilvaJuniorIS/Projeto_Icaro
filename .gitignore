@@ -13,7 +13,10 @@ __pycache__/
 *.zip
 output/*.xlsx
 output/*.csv
+output/*.md
+output/*.html
+output/*.docx
+output/*.pdf
 
 # Base SQLite local (gerada em runtime pelo Icaro)
 data/*.sqlite3
-
