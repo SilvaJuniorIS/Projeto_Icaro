@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
+import json
 from pathlib import Path
 from typing import Any
 
@@ -111,6 +112,30 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
                 observacoes TEXT,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(processo_id) REFERENCES processos(id)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS pncp_rascunhos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                processo_id INTEGER NOT NULL,
+                item_id INTEGER,
+                numero_controle TEXT,
+                objeto TEXT NOT NULL,
+                orgao TEXT,
+                unidade TEXT,
+                modalidade TEXT,
+                situacao TEXT,
+                data_publicacao TEXT,
+                valor_estimado REAL DEFAULT 0,
+                url TEXT,
+                similaridade REAL DEFAULT 0,
+                consulta TEXT,
+                payload_json TEXT,
+                status TEXT NOT NULL DEFAULT 'rascunho',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(processo_id) REFERENCES processos(id),
+                FOREIGN KEY(item_id) REFERENCES pesquisa_itens(id)
             )
         """)
 
@@ -228,6 +253,7 @@ def delete_item(item_id: int, db_path: Path | str = DB_PATH) -> bool:
     with connect(db_path) as conn:
         row = conn.execute("SELECT processo_id FROM pesquisa_itens WHERE id = ?", (item_id,)).fetchone()
         conn.execute("UPDATE fontes_preco SET item_id = NULL WHERE item_id = ?", (item_id,))
+        conn.execute("UPDATE pncp_rascunhos SET item_id = NULL WHERE item_id = ?", (item_id,))
         cur = conn.execute("DELETE FROM pesquisa_itens WHERE id = ?", (item_id,))
         if row:
             conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (now_iso(), row["processo_id"]))
@@ -313,6 +339,142 @@ def delete_fonte(fonte_id: int, db_path: Path | str = DB_PATH) -> bool:
         if row:
             conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (now_iso(), row["processo_id"]))
         return cur.rowcount > 0
+
+
+def create_pncp_rascunho(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> int:
+    init_db(db_path)
+    timestamp = now_iso()
+    payload_json = payload.get("payload_json", "")
+    if isinstance(payload_json, (dict, list)):
+        payload_json = json.dumps(payload_json, ensure_ascii=False)
+    with connect(db_path) as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO pncp_rascunhos (
+                processo_id, item_id, numero_controle, objeto, orgao, unidade,
+                modalidade, situacao, data_publicacao, valor_estimado, url,
+                similaridade, consulta, payload_json, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                int(payload["processo_id"]),
+                int(payload["item_id"]) if payload.get("item_id") else None,
+                payload.get("numero_controle", ""),
+                payload.get("objeto", ""),
+                payload.get("orgao", ""),
+                payload.get("unidade", ""),
+                payload.get("modalidade", ""),
+                payload.get("situacao", ""),
+                payload.get("data_publicacao", ""),
+                float(payload.get("valor_estimado") or 0),
+                payload.get("url", ""),
+                float(payload.get("similaridade") or 0),
+                payload.get("consulta", ""),
+                payload_json,
+                payload.get("status", "rascunho"),
+                timestamp,
+                timestamp,
+            ),
+        )
+        conn.execute(
+            "UPDATE processos SET updated_at = ? WHERE id = ?",
+            (timestamp, int(payload["processo_id"])),
+        )
+        return int(cur.lastrowid)
+
+
+def list_pncp_rascunhos(
+    processo_id: int,
+    item_id: int | None = None,
+    status: str | None = None,
+    db_path: Path | str = DB_PATH,
+) -> list[dict[str, Any]]:
+    init_db(db_path)
+    clauses = ["processo_id = ?"]
+    params: list[Any] = [int(processo_id)]
+    if item_id is not None:
+        clauses.append("item_id = ?")
+        params.append(int(item_id))
+    if status:
+        clauses.append("status = ?")
+        params.append(status)
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            f"""
+            SELECT *
+            FROM pncp_rascunhos
+            WHERE {' AND '.join(clauses)}
+            ORDER BY status ASC, similaridade DESC, created_at DESC, id DESC
+            """,
+            params,
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_pncp_rascunho(rascunho_id: int, db_path: Path | str = DB_PATH) -> dict[str, Any] | None:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        row = conn.execute("SELECT * FROM pncp_rascunhos WHERE id = ?", (rascunho_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def update_pncp_rascunho_status(
+    rascunho_id: int,
+    status: str,
+    db_path: Path | str = DB_PATH,
+) -> bool:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        row = conn.execute("SELECT processo_id FROM pncp_rascunhos WHERE id = ?", (rascunho_id,)).fetchone()
+        cur = conn.execute(
+            "UPDATE pncp_rascunhos SET status = ?, updated_at = ? WHERE id = ?",
+            (status, now_iso(), rascunho_id),
+        )
+        if row:
+            conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (now_iso(), row["processo_id"]))
+        return cur.rowcount > 0
+
+
+def delete_pncp_rascunho(rascunho_id: int, db_path: Path | str = DB_PATH) -> bool:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        row = conn.execute("SELECT processo_id FROM pncp_rascunhos WHERE id = ?", (rascunho_id,)).fetchone()
+        cur = conn.execute("DELETE FROM pncp_rascunhos WHERE id = ?", (rascunho_id,))
+        if row:
+            conn.execute("UPDATE processos SET updated_at = ? WHERE id = ?", (now_iso(), row["processo_id"]))
+        return cur.rowcount > 0
+
+
+def create_fonte_from_pncp_rascunho(
+    rascunho_id: int,
+    payload: dict[str, Any],
+    db_path: Path | str = DB_PATH,
+) -> int | None:
+    rascunho = get_pncp_rascunho(rascunho_id, db_path)
+    if not rascunho:
+        return None
+    fonte_id = create_fonte(
+        {
+            "processo_id": rascunho["processo_id"],
+            "item_id": rascunho.get("item_id"),
+            "fonte_tipo": "pncp",
+            "descricao_item": rascunho.get("objeto") or "Resultado PNCP",
+            "valor_unitario": float(payload.get("valor_unitario") or rascunho.get("valor_estimado") or 0),
+            "quantidade": float(payload.get("quantidade") or 1),
+            "orgao": rascunho.get("orgao") or rascunho.get("unidade") or "",
+            "fornecedor": "",
+            "uf": payload.get("uf", ""),
+            "municipio": "",
+            "url": rascunho.get("url", ""),
+            "data_referencia": rascunho.get("data_publicacao", ""),
+            "aproveitada": bool(payload.get("aproveitada", True)),
+            "justificativa_descarte": "",
+            "observacoes": payload.get("observacoes", "Fonte criada a partir de rascunho PNCP."),
+        },
+        db_path,
+    )
+    update_pncp_rascunho_status(rascunho_id, "usado", db_path)
+    return fonte_id
 
 
 def create_ata(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> int:
@@ -451,6 +613,7 @@ def export_snapshot(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str
         "itens": list_itens(processo_id, db_path),
         "resumo_itens": resumo_itens(processo_id, db_path),
         "fontes": list_fontes(processo_id, db_path),
+        "pncp_rascunhos": list_pncp_rascunhos(processo_id, db_path=db_path),
         "atas": list_atas(processo_id, db_path),
         "resumo": resumo_pesquisa(processo_id, db_path),
         "resumo_atas": resumo_atas(processo_id, db_path),

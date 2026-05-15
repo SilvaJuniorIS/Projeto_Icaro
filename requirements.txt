@@ -5,3 +5,5 @@ requests
 pandas
 openpyxl
 httpx
+python-docx
+python-multipart

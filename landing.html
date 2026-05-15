@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icaro | Pesquisa de precos no PNCP</title>
+  <style>
+    :root {
+      --ink: #13232f;
+      --muted: #5c6d76;
+      --line: #dbe5e8;
+      --panel: #ffffff;
+      --soft: #f4f8f9;
+      --blue: #0777b8;
+      --cyan: #15bfd3;
+      --gold: #d4a900;
+      --green: #16845e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: #fbfcfc;
+      line-height: 1.5;
+    }
+    header {
+      min-height: 92vh;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+      align-items: center;
+      gap: 42px;
+      padding: 34px clamp(22px, 5vw, 82px);
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(110deg, rgba(244, 248, 249, 0.94), rgba(255, 255, 255, 0.74)),
+        url("/assets/icaro-logo.svg") center right 9vw / min(52vw, 760px) no-repeat;
+    }
+    nav {
+      position: absolute;
+      top: 22px;
+      left: clamp(22px, 5vw, 82px);
+      right: clamp(22px, 5vw, 82px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .brand img { width: 54px; height: 34px; object-fit: contain; }
+    .nav-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    a.button, button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    a.button.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+    .hero-copy { max-width: 660px; padding-top: 54px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--blue);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(46px, 7vw, 88px);
+      line-height: 0.96;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 22px 0 0;
+      max-width: 580px;
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 22px);
+    }
+    .hero-panel {
+      align-self: end;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 540px;
+      box-shadow: 0 22px 70px rgba(8, 48, 72, 0.12);
+    }
+    .hero-panel h2 { margin: 0 0 8px; font-size: 20px; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 12px;
+      padding: 28px clamp(22px, 5vw, 82px);
+      margin-top: -44px;
+      position: relative;
+    }
+    .step, .feature {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .step strong, .feature strong { display: block; margin-bottom: 6px; }
+    .step span, .feature span { color: var(--muted); font-size: 14px; }
+    main { padding: 34px clamp(22px, 5vw, 82px) 56px; }
+    .section-title { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin: 20px 0; }
+    .section-title h2 { margin: 0; font-size: 30px; }
+    .section-title p { margin: 0; color: var(--muted); max-width: 620px; }
+    .features { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
+    .feature b { color: var(--blue); }
+    .cta {
+      margin-top: 38px;
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 920px) {
+      header { grid-template-columns: 1fr; background-size: 86vw; background-position: center top 92px; padding-top: 112px; }
+      .steps, .features { grid-template-columns: 1fr; margin-top: 0; }
+      .section-title { display: block; }
+      nav { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="brand"><img src="/assets/icaro-logo.svg" alt="Icaro"><span>Icaro</span></div>
+      <div class="nav-actions">
+        <a class="button" href="/github-page">Pagina GitHub</a>
+        <a class="button primary" href="/">Abrir dashboard</a>
+      </div>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">Pesquisa de mercado para compras publicas</p>
+      <h1>Icaro</h1>
+      <p class="subtitle">Monte uma cesta de itens, busque valores praticados no PNCP, preserve a origem de cada achado e gere relatorios de pesquisa de mercado com rastreabilidade.</p>
+    </div>
+    <div class="hero-panel">
+      <h2>Do item ao relatorio</h2>
+      <p>O fluxo foi pensado para equipes que precisam sair de uma planilha ou lista livre e chegar a uma memoria de precos defensavel, com filtros, rascunhos de fonte, revisao por item e exportacao.</p>
+    </div>
+  </header>
+
+  <section class="steps" aria-label="Fluxo de trabalho">
+    <article class="step"><strong>1. Itens</strong><span>Cadastro manual ou importacao CSV/XLSX.</span></article>
+    <article class="step"><strong>2. PNCP</strong><span>Busca por termo, UF, modalidade e periodo.</span></article>
+    <article class="step"><strong>3. Rascunhos</strong><span>Resultados salvos antes de virarem fonte.</span></article>
+    <article class="step"><strong>4. Revisao</strong><span>Status e pendencias por item da cesta.</span></article>
+    <article class="step"><strong>5. Relatorio</strong><span>DOCX, HTML, Markdown e XLSX.</span></article>
+  </section>
+
+  <main>
+    <div class="section-title">
+      <h2>Base consistente para pesquisa de precos</h2>
+      <p>O Icaro organiza a decisao administrativa em etapas pequenas: encontrar, guardar, validar e documentar cada valor usado.</p>
+    </div>
+    <section class="features">
+      <article class="feature"><strong><b>PNCP com contexto</b></strong><span>Ordenacao por similaridade lexical entre a descricao do item e o objeto da contratacao encontrada.</span></article>
+      <article class="feature"><strong><b>Memoria auditavel</b></strong><span>Cada fonte registra orgao, URL, data, aproveitamento e justificativas.</span></article>
+      <article class="feature"><strong><b>Relatorios reutilizaveis</b></strong><span>Saidas em formatos de trabalho e instrucao formal para revisao interna.</span></article>
+    </section>
+    <div class="cta">
+      <div>
+        <strong>Pronto para parametrizar uma pesquisa?</strong><br>
+        <span>Abra o dashboard e comece por uma cesta de itens.</span>
+      </div>
+      <a class="button primary" href="/">Abrir dashboard</a>
+    </div>
+  </main>
+</body>
+</html>

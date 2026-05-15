@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from datetime import date, timedelta
 from typing import Any
 
@@ -65,11 +64,7 @@ _STOPWORDS_PT = {
 
 
 def _tokens(texto: str) -> set[str]:
-    return {
-        token
-        for token in re.findall(r"[a-z0-9áàâãéêíóôõúç]+", texto.lower())
-        if len(token) >= 3
-    }
+    return tokens_texto(texto)
 
 
 def similaridade_jaccard(texto_a: str, texto_b: str) -> float:
@@ -77,29 +72,11 @@ def similaridade_jaccard(texto_a: str, texto_b: str) -> float:
     tokens_b = _tokens(texto_b)
     if not tokens_a or not tokens_b:
         return 0.0
-    inter = len(tokens_a & tokens_b)
     union = len(tokens_a | tokens_b)
-    return inter / union if union else 0.0
+    return len(tokens_a & tokens_b) / union if union else 0.0
 
 
 def _palavras_significativas(texto: str, limite: int = 14) -> list[str]:
-    partes = re.findall(r"[a-zA-Z0-9áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]+", texto.lower())
-    saida: list[str] = []
-    for p in partes:
-        if p in _STOPWORDS_PT or len(p) < 3:
-            continue
-        if p not in saida:
-            saida.append(p)
-        if len(saida) >= limite:
-            break
-    return saida
-
-
-def _tokens(texto: str) -> set[str]:  # type: ignore[no-redef]
-    return tokens_texto(texto)
-
-
-def _palavras_significativas(texto: str, limite: int = 14) -> list[str]:  # type: ignore[no-redef]
     saida: list[str] = []
     for palavra in palavras_texto(texto):
         if palavra in _STOPWORDS_PT:
@@ -160,15 +137,12 @@ def buscar_contratacoes_contextual(
     texto_referencia: str,
     data_inicial: str | None = None,
     data_final: str | None = None,
+    uf: str | None = None,
+    modalidade_id: str | None = None,
     tamanho_pagina: int = 12,
     buscar_variantes: bool = True,
     max_consultas: int = 4,
 ) -> dict[str, Any]:
-    """
-    Executa uma ou mais consultas ao PNCP, deduplica resultados e ordena por
-    similaridade lexical (Jaccard em tokens) entre o objeto da contratacao e o
-    texto de referencia (descricao do item, termo composto etc.).
-    """
     referencia = (texto_referencia or "").strip() or (termo or "").strip()
     termo_limpo = (termo or "").strip()
     if not termo_limpo and referencia:
@@ -197,6 +171,8 @@ def buscar_contratacoes_contextual(
             consulta,
             data_inicial=data_inicial,
             data_final=data_final,
+            uf=uf,
+            modalidade_id=modalidade_id,
             pagina=1,
             tamanho_pagina=tamanho_pagina,
         )
@@ -208,13 +184,9 @@ def buscar_contratacoes_contextual(
         for item in pacote.get("resultados") or []:
             chave = _chave_resultado(item)
             if chave not in agregados:
-                registro = {**item, "consultas_atingiram": [consulta]}
-                agregados[chave] = registro
-            else:
-                existente = agregados[chave].get("consultas_atingiram") or []
-                if consulta not in existente:
-                    existente.append(consulta)
-                    agregados[chave]["consultas_atingiram"] = existente
+                agregados[chave] = {**item, "consultas_atingiram": [consulta]}
+            elif consulta not in agregados[chave].get("consultas_atingiram", []):
+                agregados[chave].setdefault("consultas_atingiram", []).append(consulta)
 
     resultados = list(agregados.values())
     for item in resultados:
@@ -269,6 +241,8 @@ def buscar_contratacoes(
     termo: str,
     data_inicial: str | None = None,
     data_final: str | None = None,
+    uf: str | None = None,
+    modalidade_id: str | None = None,
     pagina: int = 1,
     tamanho_pagina: int = 10,
 ) -> dict[str, Any]:
@@ -283,6 +257,10 @@ def buscar_contratacoes(
     }
     if termo:
         params["q"] = termo
+    if uf:
+        params["uf"] = uf.upper()
+    if modalidade_id:
+        params["codigoModalidadeContratacao"] = modalidade_id
 
     url = f"{BASE_URL}/v1/contratacoes/publicacao"
     try:

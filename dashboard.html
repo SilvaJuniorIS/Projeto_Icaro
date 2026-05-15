@@ -567,6 +567,7 @@
                 <button type="button" class="nav-item" data-nav-target="fontesSection" onclick="scrollToSection('fontesSection')">Fontes e calculo</button>
                 <button type="button" class="nav-item" data-nav-target="atasSection" onclick="scrollToSection('atasSection')">Atas para carona</button>
                 <button type="button" class="nav-item" data-nav-target="checklistSection" onclick="scrollToSection('checklistSection')">Checklist</button>
+                <button type="button" class="nav-item" data-nav-target="revisaoSection" onclick="scrollToSection('revisaoSection')">Revisao final</button>
                 <button type="button" class="nav-item" data-nav-target="relatoriosSection" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
             </nav>
             <div class="note">
@@ -720,9 +721,13 @@
                     <div class="panel-body">
                         <div class="list" id="listaItens"></div>
                         <div class="import-block">
-                            <span class="form-hint">Importacao em lote: uma linha por item, formato <code>codigo;descricao;unidade;quantidade;categoria</code></span>
+                            <span class="form-hint">Importacao em lote por texto ou arquivo CSV/XLSX. Cabecalhos aceitos: codigo, descricao, unidade, quantidade, categoria, termo_busca, especificacao.</span>
                             <textarea id="itensImportacao" placeholder="001;papel A4 sulfite 75g;resma;10;consumo"></textarea>
-                            <button type="button" onclick="importarItensTexto()">Importar linhas</button>
+                            <input id="arquivoItens" type="file" accept=".csv,.xlsx">
+                            <div class="actions">
+                                <button type="button" onclick="importarItensTexto()">Importar linhas</button>
+                                <button type="button" onclick="importarItensArquivo()">Importar arquivo</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -869,6 +874,14 @@
                                     <input id="pncpDataFinal" placeholder="AAAAMMDD">
                                 </label>
                                 <label>
+                                    <span>UF</span>
+                                    <input id="pncpUf" maxlength="2" placeholder="ex: SP">
+                                </label>
+                                <label>
+                                    <span>Modalidade PNCP</span>
+                                    <input id="pncpModalidade" placeholder="codigo">
+                                </label>
+                                <label>
                                     <span>Resultados por consulta</span>
                                     <input id="pncpTamanhoPagina" type="number" min="5" max="50" value="14">
                                 </label>
@@ -914,6 +927,35 @@
                                 </tr>
                             </thead>
                             <tbody id="tabelaPncp"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="rascunhosSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Rascunhos PNCP</span>
+                            <h3>Fontes candidatas salvas</h3>
+                        </div>
+                        <div class="actions">
+                            <button type="button" onclick="carregarRascunhosPncp()">Atualizar</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Objeto</th>
+                                    <th>Orgao</th>
+                                    <th>Valor PNCP</th>
+                                    <th>Item</th>
+                                    <th>Acao</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaRascunhosPncp"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1060,6 +1102,33 @@
                 </div>
             </section>
 
+            <section id="revisaoSection" style="margin-top: 14px;">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Revisao final</span>
+                            <h3>Conferencia por item antes do relatorio</h3>
+                        </div>
+                        <span class="badge" id="revisaoResumoBadge">0 itens</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Item</th>
+                                    <th>Fontes</th>
+                                    <th>Mediana</th>
+                                    <th>Rascunhos</th>
+                                    <th>Pendencias</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaRevisaoItens"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <section id="relatoriosSection" style="margin-top: 14px;">
                 <div class="panel">
                     <div class="panel-title">
@@ -1090,6 +1159,7 @@
         let itemSelecionado = null;
         let resumoItensCache = [];
         let ultimosResultadosPncp = [];
+        let rascunhosPncp = [];
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -1167,6 +1237,43 @@
             if (fid && itemSelecionado) fid.value = String(itemSelecionado);
             scrollToSection('fontesSection');
             setStatus('Revise o valor unitario antes de gravar (o PNCP costuma trazer valor total estimado da contratacao).');
+        }
+
+        async function salvarRascunhoPncp(idx) {
+            if (!processoSelecionado) {
+                setStatus('Selecione uma pesquisa antes de salvar rascunho');
+                return;
+            }
+            const item = ultimosResultadosPncp[idx];
+            if (!item) return;
+            const sel = document.getElementById('pncpItemContexto');
+            const itemIdVal = sel && sel.value ? Number(sel.value) : itemSelecionado;
+            const payload = {
+                processo_id: processoSelecionado,
+                item_id: itemIdVal || null,
+                numero_controle: item.numero_controle || '',
+                objeto: item.objeto || 'Resultado PNCP',
+                orgao: item.orgao || '',
+                unidade: item.unidade || '',
+                modalidade: item.modalidade || '',
+                situacao: item.situacao || '',
+                data_publicacao: item.data_publicacao || '',
+                valor_estimado: Number(item.valor_estimado || 0),
+                url: item.url || '',
+                similaridade: Number(item.similaridade || 0),
+                consulta: (item.consultas_atingiram || []).join(' | '),
+                payload_json: item,
+                status: 'rascunho'
+            };
+            setStatus('Salvando rascunho PNCP...');
+            await api('/pncp/rascunhos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            await carregarRascunhosPncp();
+            await carregarRevisaoFinal();
+            setStatus('Rascunho PNCP salvo');
         }
 
         function setStatus(message) {
@@ -1280,6 +1387,9 @@
                 document.getElementById('checklistResumoBadge').textContent = '0/0';
                 document.getElementById('listaChecklist').innerHTML = '<p>Selecione ou crie um processo.</p>';
                 document.getElementById('tabelaComparabilidade').innerHTML = '<tr><td colspan="5">Selecione ou crie um processo.</td></tr>';
+                document.getElementById('tabelaRascunhosPncp').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
+                document.getElementById('tabelaRevisaoItens').innerHTML = '<tr><td colspan="6">Selecione ou crie um processo.</td></tr>';
+                document.getElementById('revisaoResumoBadge').textContent = '0 itens';
                 resumoItensCache = [];
                 const pncpSel = document.getElementById('pncpItemContexto');
                 if (pncpSel) pncpSel.innerHTML = '<option value="">Sem item (apenas termo manual)</option>';
@@ -1302,8 +1412,10 @@
             sincronizarPncpItemSelect();
             renderFontes(data.fontes);
             renderAtas(data.atas);
+            await carregarRascunhosPncp();
             await carregarChecklist();
             await carregarComparabilidade();
+            await carregarRevisaoFinal();
             atualizarContextoCabecalho();
         }
 
@@ -1467,6 +1579,8 @@
                 item_id: itemIdVal || null,
                 data_inicial: document.getElementById('pncpDataInicial').value.trim(),
                 data_final: document.getElementById('pncpDataFinal').value.trim(),
+                uf: document.getElementById('pncpUf').value.trim().toUpperCase(),
+                modalidade_id: document.getElementById('pncpModalidade').value.trim(),
                 tamanho_pagina: Number(document.getElementById('pncpTamanhoPagina').value || 14),
                 buscar_variantes: document.getElementById('pncpVariantes').checked,
                 max_consultas: Number(document.getElementById('pncpMaxConsultas').value || 4)
@@ -1544,7 +1658,10 @@
                     <td>${escapeHtml(item.situacao || '-')}</td>
                     <td>${fmtMoney.format(Number(item.valor_estimado || 0))}</td>
                     <td>${escapeHtml(item.data_publicacao || '-')}</td>
-                    <td><button type="button" onclick="preencherFonteDoPncp(${idx})">Rascunho fonte</button></td>
+                    <td>
+                        <button type="button" onclick="salvarRascunhoPncp(${idx})">Salvar</button>
+                        <button type="button" onclick="preencherFonteDoPncp(${idx})">Usar agora</button>
+                    </td>
                 `;
                 tabela.appendChild(row);
             });
@@ -1613,6 +1730,131 @@
             document.getElementById('itensImportacao').value = '';
             await carregarProcessoSelecionado();
             setStatus('Itens importados');
+        }
+
+        async function importarItensArquivo() {
+            if (!processoSelecionado) {
+                setStatus('Crie ou selecione uma pesquisa primeiro');
+                return;
+            }
+            const input = document.getElementById('arquivoItens');
+            if (!input.files || !input.files.length) {
+                setStatus('Selecione um arquivo CSV ou XLSX');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('processo_id', String(processoSelecionado));
+            formData.append('arquivo', input.files[0]);
+            setStatus('Importando arquivo...');
+            await api('/itens/importar-arquivo', {
+                method: 'POST',
+                body: formData
+            });
+            input.value = '';
+            await carregarProcessoSelecionado();
+            setStatus('Arquivo importado');
+        }
+
+        async function carregarRascunhosPncp() {
+            if (!processoSelecionado) return;
+            const res = await api(`/processos/${processoSelecionado}/pncp-rascunhos`);
+            const data = await res.json();
+            rascunhosPncp = data.rascunhos || [];
+            renderRascunhosPncp(rascunhosPncp);
+        }
+
+        function renderRascunhosPncp(rascunhos) {
+            const tabela = document.getElementById('tabelaRascunhosPncp');
+            tabela.innerHTML = '';
+            if (!rascunhos.length) {
+                tabela.innerHTML = '<tr><td colspan="6">Nenhum rascunho PNCP salvo.</td></tr>';
+                return;
+            }
+            rascunhos.forEach(item => {
+                const itemRef = itens.find(i => Number(i.id) === Number(item.item_id));
+                const row = document.createElement('tr');
+                const statusClass = item.status === 'usado' ? 'green' : 'amber';
+                row.innerHTML = `
+                    <td><span class="badge ${statusClass}">${escapeHtml(item.status || 'rascunho')}</span></td>
+                    <td>${escapeHtml(item.objeto || '-')}</td>
+                    <td>${escapeHtml(item.orgao || item.unidade || '-')}</td>
+                    <td>${fmtMoney.format(Number(item.valor_estimado || 0))}</td>
+                    <td>${escapeHtml(itemRef ? itemRef.descricao : '-')}</td>
+                    <td>
+                        <button type="button" onclick="converterRascunhoFonte(${item.id})">Virar fonte</button>
+                        <button type="button" class="danger" onclick="excluirRascunhoPncp(${item.id})">Excluir</button>
+                    </td>
+                `;
+                tabela.appendChild(row);
+            });
+        }
+
+        async function converterRascunhoFonte(id) {
+            const rascunho = rascunhosPncp.find(item => Number(item.id) === Number(id));
+            if (!rascunho) return;
+            const valorPadrao = Number(rascunho.valor_estimado || 0) > 0 ? String(rascunho.valor_estimado) : '';
+            const valor = prompt('Informe o valor unitario que entrara na cesta de precos:', valorPadrao);
+            if (valor === null) return;
+            const numero = Number(String(valor).replace(',', '.'));
+            if (!numero || numero <= 0) {
+                setStatus('Valor unitario invalido para converter rascunho');
+                return;
+            }
+            await api(`/pncp/rascunhos/${id}/fonte`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    valor_unitario: numero,
+                    aproveitada: true,
+                    observacoes: 'Fonte revisada a partir de rascunho PNCP.'
+                })
+            });
+            await carregarProcessoSelecionado();
+            setStatus('Rascunho convertido em fonte');
+        }
+
+        async function excluirRascunhoPncp(id) {
+            if (!confirm('Excluir este rascunho PNCP?')) return;
+            await api(`/pncp/rascunhos/${id}`, { method: 'DELETE' });
+            await carregarRascunhosPncp();
+            await carregarRevisaoFinal();
+            setStatus('Rascunho excluido');
+        }
+
+        async function carregarRevisaoFinal() {
+            if (!processoSelecionado) return;
+            const res = await api(`/processos/${processoSelecionado}/revisao`);
+            const data = await res.json();
+            renderRevisaoFinal(data);
+        }
+
+        function renderRevisaoFinal(data) {
+            const tabela = document.getElementById('tabelaRevisaoItens');
+            const badge = document.getElementById('revisaoResumoBadge');
+            tabela.innerHTML = '';
+            const totais = data.totais || {};
+            badge.textContent = `${totais.prontos || 0} prontos | ${totais.revisar || 0} revisar | ${totais.pendentes || 0} pendentes`;
+            const linhas = data.itens || [];
+            if (!linhas.length) {
+                tabela.innerHTML = '<tr><td colspan="6">Nenhum item para revisar.</td></tr>';
+                return;
+            }
+            linhas.forEach(entry => {
+                const item = entry.item || {};
+                const resumo = entry.resumo || {};
+                const statusClass = entry.status === 'pronto' ? 'green' : entry.status === 'revisar' ? 'amber' : '';
+                const pendencias = (entry.pendencias || []).join(' ');
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="badge ${statusClass}">${escapeHtml(entry.status)}</span></td>
+                    <td>${escapeHtml(item.codigo ? item.codigo + ' - ' : '')}${escapeHtml(item.descricao || '-')}</td>
+                    <td>${escapeHtml(String(resumo.fontes_aproveitadas || 0))}</td>
+                    <td>${resumo.preco_estimado_mediana ? fmtMoney.format(Number(resumo.preco_estimado_mediana)) : '-'}</td>
+                    <td>${escapeHtml(String(entry.rascunhos_abertos || 0))}</td>
+                    <td>${escapeHtml(pendencias || 'Sem pendencias criticas.')}</td>
+                `;
+                tabela.appendChild(row);
+            });
         }
 
 

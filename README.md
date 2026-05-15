@@ -12,11 +12,12 @@ Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa d
 
 1. **Cesta de itens**
    - Cadastro individual de itens.
-   - Importacao simples por linhas no formato `codigo;descricao;unidade;quantidade;categoria`.
+   - Importacao por linhas, CSV ou XLSX com cabecalhos flexiveis.
    - Termo de busca por item para consulta no PNCP.
 
 2. **Pesquisa de precos**
-   - Busca de licitacoes e contratacoes similares no PNCP.
+   - Busca de licitacoes e contratacoes similares no PNCP por termo, periodo, UF e modalidade.
+   - Salvamento de resultados PNCP como rascunhos de fonte antes da conversao em amostra aproveitada.
    - Vinculo de fontes a cada item da cesta.
    - Agrupamento por item, unidade, quantidade e localidade.
    - Memoria de calculo com media, mediana e tratamento de valores extremos.
@@ -36,6 +37,7 @@ Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa d
 5. **Relatorio administrativo**
    - Relatorio de pesquisa de precos.
    - Quadro comparativo.
+   - Revisao final por item antes da exportacao.
    - Justificativa da metodologia.
    - Registro de descartes de valores inconsistentes, inexequiveis ou excessivos.
 
@@ -48,7 +50,7 @@ Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa d
 
 ## Estado atual
 
-MVP local inicial. Ja existem API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, consulta contextual ao PNCP e exportacoes MD/HTML/DOCX/XLSX. O **hub AtlasNex** (`/atlasnex`) agrega links ao Icaro e ao Hermes sem unificar backends.
+MVP local com API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, importacao CSV/XLSX, rascunhos PNCP, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, revisao final por item, consulta contextual ao PNCP e exportacoes MD/HTML/DOCX/XLSX. O **hub AtlasNex** (`/atlasnex`) agrega links ao Icaro e ao Hermes sem unificar backends.
 
 ## AtlasNex (portal do ecossistema)
 
@@ -78,6 +80,8 @@ Depois acesse:
 ```text
 http://127.0.0.1:8100
 http://127.0.0.1:8100/icaro
+http://127.0.0.1:8100/landing
+http://127.0.0.1:8100/github-page
 http://127.0.0.1:8100/atlasnex
 ```
 
@@ -92,10 +96,13 @@ Icaro/
   data/
   docs/
     MANUAL_ICARO.md
+    GITHUB_PAGE_MODELO.md
   output/
   src/
   api.py
   atlasnex.html
+  github-page.html
+  landing.html
   icaro-index.html
   dashboard.html
   requirements.txt

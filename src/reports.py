@@ -4,8 +4,10 @@ import re
 from html import escape
 from pathlib import Path
 from typing import Any
-from zipfile import ZIP_DEFLATED, ZipFile
 
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -295,31 +297,74 @@ def gerar_relatorio_html(processo_id: int, output_dir: Path | str = OUTPUT_DIR) 
     return path
 
 
-def _docx_document_xml(markdown: str) -> str:
-    paragraphs = []
+def _limpar_markdown_inline(text: str) -> str:
+    return (
+        text.replace("**", "")
+        .replace("[x]", "OK")
+        .replace("[ ]", "Pendente")
+        .strip()
+    )
+
+
+def _add_docx_table(doc: Document, linhas: list[list[str]]) -> None:
+    if not linhas:
+        return
+    table = doc.add_table(rows=1, cols=len(linhas[0]))
+    table.style = "Table Grid"
+    header = table.rows[0].cells
+    for idx, value in enumerate(linhas[0]):
+        header[idx].text = _limpar_markdown_inline(value)
+        for run in header[idx].paragraphs[0].runs:
+            run.bold = True
+    for linha in linhas[1:]:
+        cells = table.add_row().cells
+        for idx, value in enumerate(linha[: len(cells)]):
+            cells[idx].text = _limpar_markdown_inline(value)
+    doc.add_paragraph()
+
+
+def _markdown_para_docx(markdown: str, path: Path) -> None:
+    doc = Document()
+    section = doc.sections[0]
+    section.top_margin = Inches(0.75)
+    section.bottom_margin = Inches(0.75)
+    section.left_margin = Inches(0.7)
+    section.right_margin = Inches(0.7)
+
+    tabela_buffer: list[list[str]] = []
+
+    def flush_table() -> None:
+        nonlocal tabela_buffer
+        _add_docx_table(doc, tabela_buffer)
+        tabela_buffer = []
+
     for line in markdown.splitlines():
-        if not line.strip() or line.startswith("| ---"):
+        stripped = line.strip()
+        if not stripped:
+            flush_table()
             continue
-        text = line
-        style = ""
-        if line.startswith("# "):
-            text = line[2:]
-            style = '<w:pStyle w:val="Title"/>'
-        elif line.startswith("## "):
-            text = line[3:]
-            style = '<w:pStyle w:val="Heading1"/>'
-        elif line.startswith("### "):
-            text = line[4:]
-            style = '<w:pStyle w:val="Heading2"/>'
-        escaped = escape(text)
-        paragraphs.append(f"<w:p><w:pPr>{style}</w:pPr><w:r><w:t>{escaped}</w:t></w:r></w:p>")
-    return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    %s
-    <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
-  </w:body>
-</w:document>""" % "".join(paragraphs)
+        if stripped.startswith("| "):
+            if " --- " in stripped:
+                continue
+            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+            tabela_buffer.append(cells)
+            continue
+
+        flush_table()
+        if stripped.startswith("# "):
+            p = doc.add_heading(_limpar_markdown_inline(stripped[2:]), level=0)
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        elif stripped.startswith("## "):
+            doc.add_heading(_limpar_markdown_inline(stripped[3:]), level=1)
+        elif stripped.startswith("### "):
+            doc.add_heading(_limpar_markdown_inline(stripped[4:]), level=2)
+        elif stripped.startswith("- "):
+            doc.add_paragraph(_limpar_markdown_inline(stripped[2:]), style="List Bullet")
+        else:
+            doc.add_paragraph(_limpar_markdown_inline(stripped))
+
+    flush_table()
+    doc.save(path)
 
 
 def gerar_relatorio_docx(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
@@ -330,20 +375,7 @@ def gerar_relatorio_docx(processo_id: int, output_dir: Path | str = OUTPUT_DIR) 
     processo = export_snapshot(processo_id)["processo"]
     filename = f"icaro_relatorio_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.docx"
     path = output_dir / filename
-    content_types = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Default Extension="xml" ContentType="application/xml"/>
-  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-</Types>"""
-    rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>"""
-    with ZipFile(path, "w", ZIP_DEFLATED) as zf:
-        zf.writestr("[Content_Types].xml", content_types)
-        zf.writestr("_rels/.rels", rels)
-        zf.writestr("word/document.xml", _docx_document_xml(markdown))
+    _markdown_para_docx(markdown, path)
     return path
 
 

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icaro | Pagina modelo GitHub</title>
+  <style>
+    :root { --ink:#15242f; --muted:#63727a; --line:#d9e3e7; --soft:#f6f9fa; --blue:#096da8; --green:#16845e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--ink); background: #fff; line-height: 1.55; }
+    header, main { max-width: 1040px; margin: 0 auto; padding: 28px 22px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand img { width: 76px; height: 46px; object-fit: contain; }
+    h1 { margin: 0; font-size: 34px; letter-spacing: 0; }
+    .muted { color: var(--muted); }
+    a.button { min-height: 38px; display: inline-flex; align-items: center; padding: 9px 13px; border: 1px solid var(--blue); border-radius: 6px; color: #fff; background: var(--blue); text-decoration: none; font-weight: 700; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0; }
+    .badge { border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--soft); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    section { border-bottom: 1px solid var(--line); padding: 24px 0; }
+    h2 { margin: 0 0 12px; font-size: 23px; }
+    ul, ol { padding-left: 20px; }
+    li { margin: 7px 0; }
+    code, pre { font-family: Consolas, monospace; background: var(--soft); border: 1px solid var(--line); border-radius: 6px; }
+    code { padding: 2px 5px; }
+    pre { padding: 14px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid var(--line); padding: 9px; text-align: left; vertical-align: top; }
+    th { background: var(--soft); }
+    @media (max-width: 760px) { header { display: block; } .grid { grid-template-columns: 1fr; } a.button { margin-top: 14px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="/assets/icaro-logo.svg" alt="Icaro">
+      <div>
+        <h1>Icaro</h1>
+        <div class="muted">Pesquisa de precos no PNCP para cestas de itens.</div>
+      </div>
+    </div>
+    <a class="button" href="/">Abrir dashboard</a>
+  </header>
+  <main>
+    <div class="badges">
+      <span class="badge">FastAPI</span>
+      <span class="badge">SQLite</span>
+      <span class="badge">PNCP</span>
+      <span class="badge">XLSX/CSV</span>
+      <span class="badge">DOCX</span>
+    </div>
+
+    <section>
+      <h2>Resumo</h2>
+      <p>O Icaro ajuda equipes de compras publicas a parametrizar uma pesquisa de mercado: o usuario informa uma lista de itens, o sistema busca contratacoes publicadas no PNCP, salva resultados como rascunhos de fonte e consolida uma cesta de precos com origem rastreavel.</p>
+    </section>
+
+    <section class="grid">
+      <div>
+        <h2>Principais recursos</h2>
+        <ul>
+          <li>Cadastro individual ou importacao real de itens via CSV/XLSX.</li>
+          <li>Busca PNCP por termo, periodo, UF e modalidade.</li>
+          <li>Rascunhos PNCP antes da conversao em fonte aproveitada.</li>
+          <li>Revisao final por item com pendencias e status.</li>
+          <li>Relatorios em DOCX, HTML, Markdown e XLSX.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Fluxo de uso</h2>
+        <ol>
+          <li>Crie uma pesquisa de mercado.</li>
+          <li>Importe ou cadastre a cesta de itens.</li>
+          <li>Busque referencias no PNCP.</li>
+          <li>Converta rascunhos em fontes com valor unitario revisado.</li>
+          <li>Revise os itens e exporte o relatorio.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section>
+      <h2>Execucao local</h2>
+      <pre><code>python -m venv venv
+venv\Scripts\pip install -r requirements.txt
+venv\Scripts\uvicorn api:app --host 127.0.0.1 --port 8100</code></pre>
+      <p>Acesse <code>http://127.0.0.1:8100</code> para o dashboard, <code>/landing</code> para a landing page e <code>/github-page</code> para esta pagina modelo.</p>
+    </section>
+
+    <section>
+      <h2>Estrutura de dados esperada para importacao</h2>
+      <table>
+        <thead><tr><th>Campo</th><th>Obrigatorio</th><th>Exemplo</th></tr></thead>
+        <tbody>
+          <tr><td>codigo</td><td>Nao</td><td>001</td></tr>
+          <tr><td>descricao</td><td>Sim</td><td>Papel A4 sulfite 75g</td></tr>
+          <tr><td>unidade</td><td>Nao</td><td>resma</td></tr>
+          <tr><td>quantidade</td><td>Nao</td><td>10</td></tr>
+          <tr><td>categoria</td><td>Nao</td><td>material de consumo</td></tr>
+          <tr><td>termo_busca</td><td>Nao</td><td>papel A4</td></tr>
+          <tr><td>especificacao</td><td>Nao</td><td>Formato A4, branco, 75g/m2</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import csv
+from io import BytesIO, StringIO
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from openpyxl import load_workbook
 from pydantic import BaseModel, Field
 
 from src.config import BASE_DIR
@@ -15,18 +18,23 @@ from src.db import (
     create_fonte,
     create_item,
     create_itens,
+    create_fonte_from_pncp_rascunho,
+    create_pncp_rascunho,
     create_processo,
     delete_ata,
     delete_fonte,
     delete_item,
+    delete_pncp_rascunho,
     export_snapshot,
     get_item,
+    get_pncp_rascunho,
     get_processo,
     init_db,
     list_atas,
     list_fontes,
     list_fontes_item,
     list_itens,
+    list_pncp_rascunhos,
     list_processos,
     resumo_atas,
     resumo_item,
@@ -35,6 +43,7 @@ from src.db import (
 )
 from src.pncp import buscar_contratacoes, buscar_contratacoes_contextual
 from src.reports import gerar_relatorio_docx, gerar_relatorio_html, gerar_relatorio_markdown, gerar_xlsx_processo
+from src.review import gerar_revisao_itens
 
 
 app = FastAPI(title="Icaro")
@@ -94,6 +103,8 @@ class PncpBuscaRequest(BaseModel):
     termo: str
     data_inicial: str = ""
     data_final: str = ""
+    uf: str = ""
+    modalidade_id: str = ""
     pagina: int = 1
     tamanho_pagina: int = 10
 
@@ -106,6 +117,8 @@ class PncpContextoBuscaRequest(BaseModel):
     item_id: int | None = None
     data_inicial: str = ""
     data_final: str = ""
+    uf: str = ""
+    modalidade_id: str = ""
     tamanho_pagina: int = 14
     buscar_variantes: bool = True
     max_consultas: int = 4
@@ -139,6 +152,32 @@ class ItensImportRequest(BaseModel):
     itens: list[ItemImportInput]
 
 
+class PncpRascunhoRequest(BaseModel):
+    processo_id: int
+    item_id: int | None = None
+    numero_controle: str = ""
+    objeto: str
+    orgao: str = ""
+    unidade: str = ""
+    modalidade: str = ""
+    situacao: str = ""
+    data_publicacao: str = ""
+    valor_estimado: float = 0
+    url: str = ""
+    similaridade: float = 0
+    consulta: str = ""
+    payload_json: dict[str, Any] | str = ""
+    status: str = "rascunho"
+
+
+class RascunhoFonteRequest(BaseModel):
+    valor_unitario: float = Field(gt=0)
+    quantidade: float = 1
+    uf: str = ""
+    aproveitada: bool = True
+    observacoes: str = "Fonte criada a partir de rascunho PNCP."
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db()
@@ -157,6 +196,16 @@ def atlasnex_hub() -> str:
 @app.get("/icaro", response_class=HTMLResponse)
 def icaro_apresentacao() -> str:
     return (BASE_DIR / "icaro-index.html").read_text(encoding="utf-8")
+
+
+@app.get("/landing", response_class=HTMLResponse)
+def landing() -> str:
+    return (BASE_DIR / "landing.html").read_text(encoding="utf-8")
+
+
+@app.get("/github-page", response_class=HTMLResponse)
+def github_page() -> str:
+    return (BASE_DIR / "github-page.html").read_text(encoding="utf-8")
 
 
 @app.get("/health")
@@ -214,6 +263,92 @@ def importar_itens(req: ItensImportRequest) -> dict[str, Any]:
         "ids": ids,
         "itens": list_itens(req.processo_id),
         "resumo_itens": resumo_itens(req.processo_id),
+    }
+
+
+def _normalizar_cabecalho(value: Any) -> str:
+    return str(value or "").strip().lower().replace("ç", "c").replace("ã", "a")
+
+
+def _linha_para_item(row: dict[str, Any]) -> dict[str, Any] | None:
+    descricao = str(
+        row.get("descricao")
+        or row.get("descrição")
+        or row.get("item")
+        or row.get("objeto")
+        or ""
+    ).strip()
+    if not descricao:
+        return None
+    quantidade_raw = row.get("quantidade") or row.get("qtd") or 1
+    try:
+        quantidade = float(str(quantidade_raw).replace(",", "."))
+    except ValueError:
+        quantidade = 1
+    return {
+        "codigo": str(row.get("codigo") or row.get("código") or row.get("cod") or "").strip(),
+        "descricao": descricao,
+        "unidade": str(row.get("unidade") or row.get("und") or "").strip(),
+        "quantidade": quantidade,
+        "categoria": str(row.get("categoria") or "").strip(),
+        "termo_busca": str(row.get("termo_busca") or row.get("termo") or descricao).strip(),
+        "especificacao": str(row.get("especificacao") or row.get("especificação") or "").strip(),
+        "status": "pendente",
+    }
+
+
+def _parse_csv_itens(content: bytes) -> list[dict[str, Any]]:
+    text = content.decode("utf-8-sig")
+    sample = text[:2048]
+    try:
+        reader = csv.DictReader(StringIO(text), dialect=csv.Sniffer().sniff(sample, delimiters=";,"))
+    except csv.Error:
+        reader = csv.DictReader(StringIO(text), delimiter=";")
+    return [
+        item
+        for row in reader
+        if (item := _linha_para_item({_normalizar_cabecalho(k): v for k, v in row.items()}))
+    ]
+
+
+def _parse_xlsx_itens(content: bytes) -> list[dict[str, Any]]:
+    wb = load_workbook(BytesIO(content), data_only=True)
+    ws = wb.active
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        return []
+    headers = [_normalizar_cabecalho(value) for value in rows[0]]
+    itens = []
+    for values in rows[1:]:
+        row = {headers[idx]: value for idx, value in enumerate(values) if idx < len(headers)}
+        item = _linha_para_item(row)
+        if item:
+            itens.append(item)
+    return itens
+
+
+@app.post("/itens/importar-arquivo")
+async def importar_itens_arquivo(
+    processo_id: int = Form(...),
+    arquivo: UploadFile = File(...),
+) -> dict[str, Any]:
+    if not get_processo(processo_id):
+        raise HTTPException(status_code=404, detail="Pesquisa nao encontrada")
+    content = await arquivo.read()
+    nome = (arquivo.filename or "").lower()
+    if nome.endswith(".csv"):
+        itens = _parse_csv_itens(content)
+    elif nome.endswith(".xlsx"):
+        itens = _parse_xlsx_itens(content)
+    else:
+        raise HTTPException(status_code=400, detail="Envie arquivo .csv ou .xlsx")
+    if not itens:
+        raise HTTPException(status_code=400, detail="Nenhum item valido encontrado no arquivo")
+    ids = create_itens(processo_id, itens)
+    return {
+        "ids": ids,
+        "itens": list_itens(processo_id),
+        "resumo_itens": resumo_itens(processo_id),
     }
 
 
@@ -314,6 +449,8 @@ def pncp_buscar(req: PncpBuscaRequest) -> dict[str, Any]:
         termo=req.termo,
         data_inicial=req.data_inicial or None,
         data_final=req.data_final or None,
+        uf=req.uf or None,
+        modalidade_id=req.modalidade_id or None,
         pagina=req.pagina,
         tamanho_pagina=req.tamanho_pagina,
     )
@@ -353,10 +490,58 @@ def pncp_buscar_contexto(req: PncpContextoBuscaRequest) -> dict[str, Any]:
         texto_referencia=texto_ref,
         data_inicial=req.data_inicial or None,
         data_final=req.data_final or None,
+        uf=req.uf or None,
+        modalidade_id=req.modalidade_id or None,
         tamanho_pagina=req.tamanho_pagina,
         buscar_variantes=req.buscar_variantes,
         max_consultas=req.max_consultas,
     )
+
+
+@app.post("/pncp/rascunhos")
+def criar_pncp_rascunho(req: PncpRascunhoRequest) -> dict[str, Any]:
+    if not get_processo(req.processo_id):
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    if req.item_id and not get_item(req.item_id):
+        raise HTTPException(status_code=404, detail="Item nao encontrado")
+    rascunho_id = create_pncp_rascunho(req.model_dump())
+    return {
+        "id": rascunho_id,
+        "rascunhos": list_pncp_rascunhos(req.processo_id),
+    }
+
+
+@app.get("/processos/{processo_id}/pncp-rascunhos")
+def listar_pncp_rascunhos(processo_id: int, item_id: int | None = None, status: str | None = None) -> dict[str, Any]:
+    if not get_processo(processo_id):
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return {"rascunhos": list_pncp_rascunhos(processo_id, item_id=item_id, status=status)}
+
+
+@app.post("/pncp/rascunhos/{rascunho_id}/fonte")
+def converter_rascunho_em_fonte(rascunho_id: int, req: RascunhoFonteRequest) -> dict[str, Any]:
+    rascunho = get_pncp_rascunho(rascunho_id)
+    if not rascunho:
+        raise HTTPException(status_code=404, detail="Rascunho nao encontrado")
+    fonte_id = create_fonte_from_pncp_rascunho(rascunho_id, req.model_dump())
+    if fonte_id is None:
+        raise HTTPException(status_code=404, detail="Rascunho nao encontrado")
+    processo_id = int(rascunho["processo_id"])
+    return {
+        "id": fonte_id,
+        "fontes": list_fontes(processo_id),
+        "resumo": resumo_pesquisa(processo_id),
+        "resumo_itens": resumo_itens(processo_id),
+        "rascunhos": list_pncp_rascunhos(processo_id),
+    }
+
+
+@app.delete("/pncp/rascunhos/{rascunho_id}")
+def excluir_pncp_rascunho(rascunho_id: int) -> dict[str, Any]:
+    deleted = delete_pncp_rascunho(rascunho_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Rascunho nao encontrado")
+    return {"status": "deleted", "id": rascunho_id}
 
 
 @app.get("/processos/{processo_id}/resumo")
@@ -364,6 +549,14 @@ def resumo(processo_id: int) -> dict[str, Any]:
     if not get_processo(processo_id):
         raise HTTPException(status_code=404, detail="Processo nao encontrado")
     return resumo_pesquisa(processo_id)
+
+
+@app.get("/processos/{processo_id}/revisao")
+def revisao_final(processo_id: int) -> dict[str, Any]:
+    data = export_snapshot(processo_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Processo nao encontrado")
+    return gerar_revisao_itens(data)
 
 
 @app.get("/processos/{processo_id}/snapshot")
