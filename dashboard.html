@@ -213,6 +213,38 @@
             color: var(--blue);
         }
 
+        .tab-strip {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 0 12px;
+            margin: 0 0 14px;
+            background: var(--bg);
+        }
+
+        .tab-button {
+            flex: 0 0 auto;
+            min-height: 38px;
+            padding: 0 14px;
+            border-color: var(--line);
+            background: var(--surface);
+            color: var(--ink);
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            border-color: #1d5f9e;
+            background: var(--blue);
+            color: #fff;
+        }
+
+        [data-tab][hidden] {
+            display: none !important;
+        }
+
         section[id$="Section"] {
             scroll-margin-top: 16px;
         }
@@ -548,11 +580,18 @@
             .status { max-width: 100%; }
             .metrics, .form-grid { grid-template-columns: 1fr; }
             .workflow-banner { font-size: 12px; }
+            .tab-strip {
+                top: 0;
+                margin-left: -16px;
+                margin-right: -16px;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <a class="skip-link" href="#pesquisaSection">Ir ao conteudo principal</a>
+    <a class="skip-link" href="#overviewSection">Ir ao conteudo principal</a>
     <div class="app">
         <aside>
             <div class="brand">
@@ -561,18 +600,19 @@
                 <span>Pesquisa de mercado no PNCP</span>
             </div>
             <nav aria-label="Secoes do Icaro">
-                <button type="button" class="nav-item active" data-nav-target="pesquisaSection" onclick="scrollToSection('pesquisaSection')">Pesquisa</button>
-                <button type="button" class="nav-item" data-nav-target="itensSection" onclick="scrollToSection('itensSection')">Itens da cesta</button>
-                <button type="button" class="nav-item" data-nav-target="pncpSection" onclick="scrollToSection('pncpSection')">Busca PNCP</button>
-                <button type="button" class="nav-item" data-nav-target="fontesSection" onclick="scrollToSection('fontesSection')">Fontes e calculo</button>
-                <button type="button" class="nav-item" data-nav-target="atasSection" onclick="scrollToSection('atasSection')">Atas para carona</button>
-                <button type="button" class="nav-item" data-nav-target="checklistSection" onclick="scrollToSection('checklistSection')">Checklist</button>
-                <button type="button" class="nav-item" data-nav-target="revisaoSection" onclick="scrollToSection('revisaoSection')">Revisao final</button>
-                <button type="button" class="nav-item" data-nav-target="relatoriosSection" onclick="scrollToSection('relatoriosSection')">Relatorios</button>
+                <button type="button" class="nav-item active" data-tab-button="visao" onclick="showTab('visao')">Visao geral</button>
+                <button type="button" class="nav-item" data-tab-button="pesquisa" onclick="showTab('pesquisa')">Pesquisa</button>
+                <button type="button" class="nav-item" data-tab-button="itens" onclick="showTab('itens')">Itens da cesta</button>
+                <button type="button" class="nav-item" data-tab-button="pncp" onclick="showTab('pncp')">Busca PNCP</button>
+                <button type="button" class="nav-item" data-tab-button="fontes" onclick="showTab('fontes')">Fontes e calculo</button>
+                <button type="button" class="nav-item" data-tab-button="atas" onclick="showTab('atas')">Atas para carona</button>
+                <button type="button" class="nav-item" data-tab-button="revisao" onclick="showTab('revisao')">Revisao</button>
+                <button type="button" class="nav-item" data-tab-button="relatorios" onclick="showTab('relatorios')">Relatorios</button>
             </nav>
             <div class="note">
                 Informe uma cesta de itens, busque contratacoes no PNCP com ordenacao por similaridade a descricao do item e vincule fontes com rastreabilidade.
             </div>
+            <a class="nav-item" href="/auth/logout" style="text-decoration: none; justify-content: center; margin-top: 12px;">Sair</a>
         </aside>
 
         <main>
@@ -600,7 +640,56 @@
                 escolha ou crie uma pesquisa na lista &rarr; cadastre itens (ou importe linhas) &rarr; use Busca PNCP (o botao PNCP ao lado de cada item preenche o formulario) &rarr; registre fontes e valores &rarr; atas, se for carona &rarr; checklist e relatorios.
             </div>
 
-            <section class="grid" id="pesquisaSection">
+            <div class="tab-strip" role="tablist" aria-label="Etapas do Icaro">
+                <button type="button" class="tab-button active" data-tab-button="visao" onclick="showTab('visao')" role="tab">Visao geral</button>
+                <button type="button" class="tab-button" data-tab-button="pesquisa" onclick="showTab('pesquisa')" role="tab">Pesquisa</button>
+                <button type="button" class="tab-button" data-tab-button="itens" onclick="showTab('itens')" role="tab">Itens</button>
+                <button type="button" class="tab-button" data-tab-button="pncp" onclick="showTab('pncp')" role="tab">PNCP</button>
+                <button type="button" class="tab-button" data-tab-button="fontes" onclick="showTab('fontes')" role="tab">Fontes</button>
+                <button type="button" class="tab-button" data-tab-button="atas" onclick="showTab('atas')" role="tab">Atas</button>
+                <button type="button" class="tab-button" data-tab-button="revisao" onclick="showTab('revisao')" role="tab">Revisao</button>
+                <button type="button" class="tab-button" data-tab-button="relatorios" onclick="showTab('relatorios')" role="tab">Relatorios</button>
+            </div>
+
+            <section class="grid" id="overviewSection" data-tab="visao">
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Visao geral</span>
+                            <h3>Painel de comando</h3>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <p class="lead">Use esta aba como ponto de partida. A pesquisa ativa aparece no topo, as metricas ficam sempre visiveis e os atalhos abaixo abrem cada etapa sem rolagem longa.</p>
+                        <div class="actions">
+                            <button type="button" class="primary" onclick="showTab('pesquisa')">Criar ou selecionar pesquisa</button>
+                            <button type="button" onclick="showTab('itens')">Cadastrar itens</button>
+                            <button type="button" onclick="showTab('pncp')">Buscar PNCP</button>
+                            <button type="button" onclick="showTab('fontes')">Revisar fontes</button>
+                            <button type="button" onclick="showTab('revisao')">Ver pendencias</button>
+                            <button type="button" onclick="showTab('relatorios')">Exportar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>Rotina recomendada</span>
+                            <h3>Proxima melhor acao</h3>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="list">
+                            <div class="processo-item"><strong>1. Pesquisa</strong><small>Crie ou selecione o processo de pesquisa de mercado.</small></div>
+                            <div class="processo-item"><strong>2. Itens</strong><small>Cadastre a cesta e escolha um item ativo para trabalhar.</small></div>
+                            <div class="processo-item"><strong>3. PNCP e fontes</strong><small>Busque referencias, salve rascunhos e valide valores unitarios.</small></div>
+                            <div class="processo-item"><strong>4. Revisao e relatorios</strong><small>Confira pendencias, comparabilidade e gere os arquivos finais.</small></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid" id="pesquisaSection" data-tab="pesquisa" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -662,7 +751,7 @@
                 </div>
             </section>
 
-            <section class="grid" id="itensSection" style="margin-top: 14px;">
+            <section class="grid" id="itensSection" data-tab="itens" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -733,7 +822,7 @@
                 </div>
             </section>
 
-            <section class="grid" id="fontesSection" style="margin-top: 14px;">
+            <section class="grid" id="fontesSection" data-tab="fontes" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -839,7 +928,7 @@
                 </div>
             </section>
 
-            <section class="grid" id="pncpSection" style="margin-top: 14px;">
+            <section class="grid" id="pncpSection" data-tab="pncp" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -874,16 +963,62 @@
                                     <input id="pncpDataFinal" placeholder="AAAAMMDD">
                                 </label>
                                 <label>
-                                    <span>UF</span>
-                                    <input id="pncpUf" maxlength="2" placeholder="ex: SP">
+                                    <span>Estado ou regiao</span>
+                                    <select id="pncpUf">
+                                        <option value="">Todos os estados</option>
+                                        <option value="REG:NORTE">Regiao Norte</option>
+                                        <option value="REG:NORDESTE">Regiao Nordeste</option>
+                                        <option value="REG:CENTRO_OESTE">Regiao Centro-Oeste</option>
+                                        <option value="REG:SUDESTE">Regiao Sudeste</option>
+                                        <option value="REG:SUL">Regiao Sul</option>
+                                        <option value="AC">AC - Acre</option>
+                                        <option value="AL">AL - Alagoas</option>
+                                        <option value="AP">AP - Amapa</option>
+                                        <option value="AM">AM - Amazonas</option>
+                                        <option value="BA">BA - Bahia</option>
+                                        <option value="CE">CE - Ceara</option>
+                                        <option value="DF">DF - Distrito Federal</option>
+                                        <option value="ES">ES - Espirito Santo</option>
+                                        <option value="GO">GO - Goias</option>
+                                        <option value="MA">MA - Maranhao</option>
+                                        <option value="MT">MT - Mato Grosso</option>
+                                        <option value="MS">MS - Mato Grosso do Sul</option>
+                                        <option value="MG">MG - Minas Gerais</option>
+                                        <option value="PA">PA - Para</option>
+                                        <option value="PB">PB - Paraiba</option>
+                                        <option value="PR">PR - Parana</option>
+                                        <option value="PE">PE - Pernambuco</option>
+                                        <option value="PI">PI - Piaui</option>
+                                        <option value="RJ">RJ - Rio de Janeiro</option>
+                                        <option value="RN">RN - Rio Grande do Norte</option>
+                                        <option value="RS">RS - Rio Grande do Sul</option>
+                                        <option value="RO">RO - Rondonia</option>
+                                        <option value="RR">RR - Roraima</option>
+                                        <option value="SC">SC - Santa Catarina</option>
+                                        <option value="SP">SP - Sao Paulo</option>
+                                        <option value="SE">SE - Sergipe</option>
+                                        <option value="TO">TO - Tocantins</option>
+                                    </select>
                                 </label>
                                 <label>
                                     <span>Modalidade PNCP</span>
-                                    <input id="pncpModalidade" placeholder="codigo">
+                                    <input id="pncpModalidade" placeholder="vazio = estrategia automatica">
                                 </label>
                                 <label>
                                     <span>Resultados por consulta</span>
-                                    <input id="pncpTamanhoPagina" type="number" min="5" max="50" value="14">
+                                    <input id="pncpTamanhoPagina" type="number" min="10" max="50" value="14">
+                                </label>
+                                <label>
+                                    <span>Estrategia</span>
+                                    <select id="pncpEstrategia">
+                                        <option value="equilibrada" selected>Equilibrada</option>
+                                        <option value="precisa">Precisa</option>
+                                        <option value="abrangente">Abrangente</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Coerencia minima (%)</span>
+                                    <input id="pncpSimilaridadeMinima" type="number" min="0" max="80" value="0">
                                 </label>
                                 <label>
                                     <span>Consultas combinadas (max.)</span>
@@ -932,7 +1067,7 @@
                 </div>
             </section>
 
-            <section id="rascunhosSection" style="margin-top: 14px;">
+            <section id="rascunhosSection" data-tab="pncp" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -961,7 +1096,7 @@
                 </div>
             </section>
 
-            <section class="grid" id="atasSection" style="margin-top: 14px;">
+            <section class="grid" id="atasSection" data-tab="atas" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -1064,7 +1199,7 @@
                 </div>
             </section>
 
-            <section class="grid" id="checklistSection" style="margin-top: 14px;">
+            <section class="grid" id="checklistSection" data-tab="revisao" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -1102,7 +1237,7 @@
                 </div>
             </section>
 
-            <section id="revisaoSection" style="margin-top: 14px;">
+            <section id="revisaoSection" data-tab="revisao" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -1129,7 +1264,7 @@
                 </div>
             </section>
 
-            <section id="relatoriosSection" style="margin-top: 14px;">
+            <section id="relatoriosSection" data-tab="relatorios" hidden>
                 <div class="panel">
                     <div class="panel-title">
                         <div>
@@ -1160,6 +1295,7 @@
         let resumoItensCache = [];
         let ultimosResultadosPncp = [];
         let rascunhosPncp = [];
+        let abaAtiva = 'visao';
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -1229,6 +1365,7 @@
             document.getElementById('fonteTipo').value = 'pncp';
             document.getElementById('descricaoItem').value = item.objeto || '';
             document.getElementById('orgao').value = (item.orgao || item.unidade || '').trim();
+            document.getElementById('fornecedor').value = item.fornecedor || '';
             document.getElementById('urlFonte').value = item.url || '';
             const v = Number(item.valor_estimado || 0);
             document.getElementById('valorUnitario').value = v > 0 ? String(v) : '';
@@ -1255,6 +1392,7 @@
                 objeto: item.objeto || 'Resultado PNCP',
                 orgao: item.orgao || '',
                 unidade: item.unidade || '',
+                fornecedor: item.fornecedor || '',
                 modalidade: item.modalidade || '',
                 situacao: item.situacao || '',
                 data_publicacao: item.data_publicacao || '',
@@ -1280,14 +1418,27 @@
             document.getElementById('status').textContent = message;
         }
 
-        function scrollToSection(id) {
-            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.querySelectorAll('aside nav .nav-item').forEach(btn => {
-                const target = btn.getAttribute('data-nav-target');
-                if (target) {
-                    btn.classList.toggle('active', target === id);
+        function showTab(tab, focusSectionId = null) {
+            abaAtiva = tab || 'visao';
+            document.querySelectorAll('[data-tab]').forEach(section => {
+                section.hidden = section.getAttribute('data-tab') !== abaAtiva;
+            });
+            document.querySelectorAll('[data-tab-button]').forEach(btn => {
+                const active = btn.getAttribute('data-tab-button') === abaAtiva;
+                btn.classList.toggle('active', active);
+                if (btn.getAttribute('role') === 'tab') {
+                    btn.setAttribute('aria-selected', active ? 'true' : 'false');
                 }
             });
+            if (focusSectionId) {
+                document.getElementById(focusSectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function scrollToSection(id) {
+            const section = document.getElementById(id);
+            const tab = section?.getAttribute('data-tab') || 'visao';
+            showTab(tab, id);
         }
 
         function atualizarContextoCabecalho() {
@@ -1573,15 +1724,26 @@
             event.preventDefault();
             const sel = document.getElementById('pncpItemContexto');
             const itemIdVal = sel && sel.value ? Number(sel.value) : null;
+            const regioesPncp = {
+                'REG:NORTE': ['AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO'],
+                'REG:NORDESTE': ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
+                'REG:CENTRO_OESTE': ['DF', 'GO', 'MT', 'MS'],
+                'REG:SUDESTE': ['ES', 'MG', 'RJ', 'SP'],
+                'REG:SUL': ['PR', 'RS', 'SC']
+            };
+            const filtroUf = document.getElementById('pncpUf').value;
             const payload = {
                 termo: document.getElementById('pncpTermo').value.trim(),
                 texto_referencia: document.getElementById('pncpTextoReferencia').value.trim(),
                 item_id: itemIdVal || null,
                 data_inicial: document.getElementById('pncpDataInicial').value.trim(),
                 data_final: document.getElementById('pncpDataFinal').value.trim(),
-                uf: document.getElementById('pncpUf').value.trim().toUpperCase(),
+                uf: filtroUf && !filtroUf.startsWith('REG:') ? filtroUf : '',
+                ufs: regioesPncp[filtroUf] || [],
                 modalidade_id: document.getElementById('pncpModalidade').value.trim(),
                 tamanho_pagina: Number(document.getElementById('pncpTamanhoPagina').value || 14),
+                estrategia: document.getElementById('pncpEstrategia').value,
+                similaridade_minima: Number(document.getElementById('pncpSimilaridadeMinima').value || 0) / 100,
                 buscar_variantes: document.getElementById('pncpVariantes').checked,
                 max_consultas: Number(document.getElementById('pncpMaxConsultas').value || 4)
             };
@@ -1621,7 +1783,9 @@
                 if (data.ok && data.consultas && data.consultas.length) {
                     const ref = (data.texto_referencia || '').trim();
                     const refShort = ref.length > 160 ? ref.slice(0, 160) + '...' : ref;
-                    let line = `Consultas: ${data.consultas.join(' | ')}. Referencia: ${refShort || '(termo)'}`;
+                    const modalidades = data.modalidades && data.modalidades.length ? ` Modalidades: ${data.modalidades.join(', ')}.` : '';
+                    const chamadas = data.chamadas != null ? ` Chamadas: ${data.chamadas}.` : '';
+                    let line = `Consultas: ${data.consultas.join(' | ')}.${modalidades}${chamadas} Referencia: ${refShort || '(termo)'}`;
                     if (data.erros_parciais && data.erros_parciais.length) {
                         line += ` | Alerta: ${data.erros_parciais[0]}`;
                     }
@@ -1984,6 +2148,7 @@
             setStatus('Relatorio para impressao iniciado');
         }
 
+        showTab('visao');
         carregarProcessos()
             .then(carregarProcessoSelecionado)
             .catch(err => setStatus(`Erro: ${err.message}`));

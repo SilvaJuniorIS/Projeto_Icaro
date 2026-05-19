@@ -8,6 +8,24 @@ O Icaro organiza uma pesquisa de precos por itens. O usuario informa uma lista d
 
 Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa de mercado com maior rastreabilidade por item, padronizacao das fontes e relatorio administrativo de precos praticados.
 
+## Icaro GovLab AtlasNex
+
+O Icaro tambem foi estruturado como uma oferta comercial vinculada ao ecossistema AtlasNex: software, metodo, capacitacao e governanca para orgaos publicos que querem amadurecer processos de licitacao.
+
+Materiais estrategicos:
+
+- `docs/ICARO_GOVLAB_PLANO_ESTRATEGICO.md` - viabilidade, linha do tempo, modelo comercial e caminho de execucao.
+- `docs/ICARO_GOVLAB_KIT_PRODUTOS.md` - material detalhado de cada produto da familia Icaro GovLab.
+- `docs/ICARO_GOVLAB_IDENTIDADE_VISUAL.md` - arquitetura de marca, paleta, tom de voz e diretrizes visuais.
+- `docs/ICARO_PROCESSOS_DE_USO.md` - passo a passo operacional de uso do Icaro.
+
+Paginas:
+
+- Landing Icaro GovLab: `http://127.0.0.1:8100/`
+- Login: `http://127.0.0.1:8100/login`
+- Area de trabalho: `http://127.0.0.1:8100/app`
+- Portal AtlasNex: `http://127.0.0.1:8100/atlasnex`
+
 ## Modulos previstos
 
 1. **Cesta de itens**
@@ -51,6 +69,8 @@ Apoiar equipes de compras, planejamento e licitacoes na elaboracao de pesquisa d
 ## Estado atual
 
 MVP local com API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, importacao CSV/XLSX, rascunhos PNCP, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, revisao final por item, consulta contextual ao PNCP e exportacoes MD/HTML/DOCX/XLSX. O **hub AtlasNex** (`/atlasnex`) agrega links ao Icaro e ao Hermes sem unificar backends.
+
+Para publicar online, use as variaveis `ICARO_AUTH_USER`, `ICARO_AUTH_PASSWORD`, `ICARO_AUTH_SECRET` e `ICARO_COOKIE_SECURE=1`. O guia rapido esta em `DEPLOY_ONLINE.md`.
 
 ## AtlasNex (portal do ecossistema)
 

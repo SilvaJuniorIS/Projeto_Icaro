@@ -123,6 +123,7 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
                 objeto TEXT NOT NULL,
                 orgao TEXT,
                 unidade TEXT,
+                fornecedor TEXT,
                 modalidade TEXT,
                 situacao TEXT,
                 data_publicacao TEXT,
@@ -138,6 +139,12 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
                 FOREIGN KEY(item_id) REFERENCES pesquisa_itens(id)
             )
         """)
+        pncp_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(pncp_rascunhos)").fetchall()
+        }
+        if "fornecedor" not in pncp_columns:
+            conn.execute("ALTER TABLE pncp_rascunhos ADD COLUMN fornecedor TEXT")
 
 
 def create_processo(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> int:
@@ -351,10 +358,10 @@ def create_pncp_rascunho(payload: dict[str, Any], db_path: Path | str = DB_PATH)
         cur = conn.execute(
             """
             INSERT INTO pncp_rascunhos (
-                processo_id, item_id, numero_controle, objeto, orgao, unidade,
+                processo_id, item_id, numero_controle, objeto, orgao, unidade, fornecedor,
                 modalidade, situacao, data_publicacao, valor_estimado, url,
                 similaridade, consulta, payload_json, status, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 int(payload["processo_id"]),
@@ -363,6 +370,7 @@ def create_pncp_rascunho(payload: dict[str, Any], db_path: Path | str = DB_PATH)
                 payload.get("objeto", ""),
                 payload.get("orgao", ""),
                 payload.get("unidade", ""),
+                payload.get("fornecedor", ""),
                 payload.get("modalidade", ""),
                 payload.get("situacao", ""),
                 payload.get("data_publicacao", ""),
@@ -462,7 +470,7 @@ def create_fonte_from_pncp_rascunho(
             "valor_unitario": float(payload.get("valor_unitario") or rascunho.get("valor_estimado") or 0),
             "quantidade": float(payload.get("quantidade") or 1),
             "orgao": rascunho.get("orgao") or rascunho.get("unidade") or "",
-            "fornecedor": "",
+            "fornecedor": rascunho.get("fornecedor") or "",
             "uf": payload.get("uf", ""),
             "municipio": "",
             "url": rascunho.get("url", ""),

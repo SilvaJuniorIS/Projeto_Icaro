@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: icaro
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ICARO_COOKIE_SECURE
+        value: "1"
+      - key: ICARO_AUTH_USER
+        sync: false
+      - key: ICARO_AUTH_PASSWORD
+        sync: false
+      - key: ICARO_AUTH_SECRET
+        sync: false

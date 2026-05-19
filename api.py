@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import csv
+import hmac
+import os
 from io import BytesIO, StringIO
 from typing import Any
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from openpyxl import load_workbook
 from pydantic import BaseModel, Field
@@ -49,6 +51,102 @@ from src.review import gerar_revisao_itens
 app = FastAPI(title="Icaro")
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "assets"), name="assets")
 app.mount("/icaro-docs", StaticFiles(directory=BASE_DIR / "docs"), name="icaro_docs")
+
+AUTH_COOKIE = "icaro_session"
+AUTH_USER = os.getenv("ICARO_AUTH_USER", "admin")
+AUTH_PASSWORD = os.getenv("ICARO_AUTH_PASSWORD", "icaro123")
+AUTH_SECRET = os.getenv("ICARO_AUTH_SECRET", "troque-este-segredo-em-producao")
+PUBLIC_PATHS = {
+    "/",
+    "/landing",
+    "/icaro",
+    "/atlasnex",
+    "/github-page",
+    "/login",
+    "/auth/login",
+    "/health",
+}
+
+
+def _assinar_usuario(usuario: str) -> str:
+    assinatura = hmac.new(AUTH_SECRET.encode("utf-8"), usuario.encode("utf-8"), "sha256").hexdigest()
+    return f"{usuario}:{assinatura}"
+
+
+def _sessao_valida(token: str | None) -> bool:
+    if not token or ":" not in token:
+        return False
+    usuario, assinatura = token.split(":", 1)
+    assinatura_esperada = _assinar_usuario(usuario).split(":", 1)[1]
+    return hmac.compare_digest(usuario, AUTH_USER) and hmac.compare_digest(assinatura, assinatura_esperada)
+
+
+def _is_public_path(path: str) -> bool:
+    return path in PUBLIC_PATHS or path.startswith("/assets/") or path.startswith("/icaro-docs/")
+
+
+def _login_page(erro: str = "") -> str:
+    erro_html = f'<div class="error">{erro}</div>' if erro else ""
+    return f"""<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Icaro - Login</title>
+    <style>
+        :root {{ --bg:#f5f7fb; --ink:#172033; --muted:#667085; --blue:#1769aa; --line:#d8e0ea; --surface:#fff; }}
+        * {{ box-sizing: border-box; }}
+        body {{
+            margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+            font-family: Inter, Arial, sans-serif; color: var(--ink); background: var(--bg);
+        }}
+        main {{
+            width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line);
+            border-radius: 8px; padding: 28px; box-shadow: 0 18px 50px rgba(23,32,51,.08);
+        }}
+        h1 {{ margin: 0 0 8px; font-size: 28px; }}
+        p {{ margin: 0 0 22px; color: var(--muted); line-height: 1.5; }}
+        label {{ display: grid; gap: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 700; color: var(--muted); }}
+        input {{
+            min-height: 42px; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px;
+            font: inherit; color: var(--ink); background: #fff;
+        }}
+        button {{
+            width: 100%; min-height: 42px; border: 0; border-radius: 6px; padding: 10px 14px;
+            font: inherit; font-weight: 800; color: #fff; background: var(--blue); cursor: pointer;
+        }}
+        .links {{ display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; font-size: 13px; }}
+        a {{ color: var(--blue); text-decoration: none; font-weight: 700; }}
+        .error {{ margin-bottom: 14px; padding: 10px 12px; border-radius: 6px; background: #fff1f1; color: #9f1d1d; font-weight: 700; }}
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Acessar Icaro</h1>
+        <p>Entre para abrir a area de trabalho da pesquisa de mercado.</p>
+        {erro_html}
+        <form method="post" action="/auth/login">
+            <label>Usuario<input name="usuario" autocomplete="username" required></label>
+            <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+            <button type="submit">Entrar no painel</button>
+        </form>
+        <div class="links">
+            <a href="/">Voltar para a landing page</a>
+            <a href="/icaro">Conhecer o produto</a>
+        </div>
+    </main>
+</body>
+</html>"""
+
+
+@app.middleware("http")
+async def exigir_login(request: Request, call_next):
+    path = request.url.path
+    if _is_public_path(path) or _sessao_valida(request.cookies.get(AUTH_COOKIE)):
+        return await call_next(request)
+    if request.method == "GET" and "text/html" in request.headers.get("accept", ""):
+        return RedirectResponse(url="/login", status_code=303)
+    return JSONResponse({"detail": "Autenticacao obrigatoria"}, status_code=401)
 
 
 class ProcessoRequest(BaseModel):
@@ -118,10 +216,13 @@ class PncpContextoBuscaRequest(BaseModel):
     data_inicial: str = ""
     data_final: str = ""
     uf: str = ""
+    ufs: list[str] = Field(default_factory=list)
     modalidade_id: str = ""
     tamanho_pagina: int = 14
     buscar_variantes: bool = True
     max_consultas: int = 4
+    estrategia: str = "equilibrada"
+    similaridade_minima: float = 0.0
 
 
 class ItemPesquisaRequest(BaseModel):
@@ -159,6 +260,7 @@ class PncpRascunhoRequest(BaseModel):
     objeto: str
     orgao: str = ""
     unidade: str = ""
+    fornecedor: str = ""
     modalidade: str = ""
     situacao: str = ""
     data_publicacao: str = ""
@@ -184,8 +286,41 @@ def startup() -> None:
 
 
 @app.get("/", response_class=HTMLResponse)
+def home() -> str:
+    return (BASE_DIR / "landing.html").read_text(encoding="utf-8")
+
+
+@app.get("/app", response_class=HTMLResponse)
 def dashboard() -> str:
     return (BASE_DIR / "dashboard.html").read_text(encoding="utf-8")
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login() -> str:
+    return _login_page()
+
+
+@app.post("/auth/login")
+def auth_login(usuario: str = Form(...), senha: str = Form(...)):
+    if hmac.compare_digest(usuario, AUTH_USER) and hmac.compare_digest(senha, AUTH_PASSWORD):
+        response = RedirectResponse(url="/app", status_code=303)
+        response.set_cookie(
+            AUTH_COOKIE,
+            _assinar_usuario(usuario),
+            httponly=True,
+            samesite="lax",
+            secure=os.getenv("ICARO_COOKIE_SECURE", "0") == "1",
+            max_age=60 * 60 * 12,
+        )
+        return response
+    return HTMLResponse(_login_page("Usuario ou senha invalidos."), status_code=401)
+
+
+@app.get("/auth/logout")
+def auth_logout():
+    response = RedirectResponse(url="/", status_code=303)
+    response.delete_cookie(AUTH_COOKIE)
+    return response
 
 
 @app.get("/atlasnex", response_class=HTMLResponse)
@@ -491,10 +626,13 @@ def pncp_buscar_contexto(req: PncpContextoBuscaRequest) -> dict[str, Any]:
         data_inicial=req.data_inicial or None,
         data_final=req.data_final or None,
         uf=req.uf or None,
+        ufs=req.ufs or None,
         modalidade_id=req.modalidade_id or None,
         tamanho_pagina=req.tamanho_pagina,
         buscar_variantes=req.buscar_variantes,
         max_consultas=req.max_consultas,
+        estrategia=req.estrategia,
+        similaridade_minima=req.similaridade_minima,
     )
 
 

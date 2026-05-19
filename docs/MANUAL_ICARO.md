@@ -215,3 +215,5 @@ Quando o Hermes estiver disponivel, informe a URL base em **Integracao** e use *
 ## 14. Contato e evolucao
 
 Roadmap amplo em `PLANO_PRODUTO_ICARO.md`. Para integracao futura (login unico, API compartilhada, banco unico), defina arquitetura alvo com a equipe AtlasNex antes de migrar dados.
+
+Para um roteiro operacional detalhado, consulte tambem `docs/ICARO_PROCESSOS_DE_USO.md`.

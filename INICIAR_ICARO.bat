@@ -28,9 +28,17 @@ if errorlevel 1 (
 )
 
 echo.
+if "%ICARO_AUTH_USER%"=="" set ICARO_AUTH_USER=admin
+if "%ICARO_AUTH_PASSWORD%"=="" set ICARO_AUTH_PASSWORD=icaro123
+
 echo Iniciando Icaro em http://127.0.0.1:8100
+echo Landing: http://127.0.0.1:8100/
+echo Login: http://127.0.0.1:8100/login
+echo Area de trabalho: http://127.0.0.1:8100/app
 echo Hub AtlasNex: http://127.0.0.1:8100/atlasnex
 echo Apresentacao Icaro: http://127.0.0.1:8100/icaro
+echo Usuario local padrao: %ICARO_AUTH_USER%
+echo Senha local padrao: %ICARO_AUTH_PASSWORD%
 echo.
 start "" "http://127.0.0.1:8100"
 "venv\Scripts\python.exe" -m uvicorn api:app --host 127.0.0.1 --port 8100

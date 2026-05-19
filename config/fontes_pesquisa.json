@@ -15,6 +15,34 @@
             "ativo": false
         },
         {
+            "id": "compras_gov_licitacoes",
+            "nome": "Compras.gov.br Dados Abertos - Licitacoes e Itens",
+            "tipo": "api_dados_abertos",
+            "base_legal": "Dados abertos do Governo Federal / SIASG",
+            "ativo": false
+        },
+        {
+            "id": "compras_gov_contratos",
+            "nome": "Compras.gov.br Dados Abertos - Contratos e Itens de Contrato",
+            "tipo": "api_dados_abertos",
+            "base_legal": "Dados abertos do Governo Federal / Contratos.gov.br",
+            "ativo": false
+        },
+        {
+            "id": "catmat_catser",
+            "nome": "Catalogo de Materiais e Servicos - CATMAT/CATSER",
+            "tipo": "catalogo_referencia",
+            "base_legal": "Padronizacao de itens do Governo Federal",
+            "ativo": false
+        },
+        {
+            "id": "portais_transparencia_locais",
+            "nome": "Portais de transparencia estaduais e municipais",
+            "tipo": "banco_publico_local",
+            "base_legal": "Lei de Acesso a Informacao e normas locais",
+            "ativo": false
+        },
+        {
             "id": "atas_registro_precos",
             "nome": "Atas de Registro de Precos",
             "tipo": "registro_precos",
@@ -30,4 +58,3 @@
         "preferir_multiplas_fontes": true
     }
 }
-

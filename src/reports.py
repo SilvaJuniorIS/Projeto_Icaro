@@ -141,6 +141,38 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
     else:
         linhas.append("| - | - | Nenhuma fonte registrada | - | - | - | - |")
 
+    fontes_com_identificacao = [
+        fonte
+        for fonte in fontes
+        if fonte.get("descricao_item") and (fonte.get("orgao") or fonte.get("fornecedor"))
+    ]
+    linhas.extend(
+        [
+            "",
+            "### Objetos localizados com identificacao da fonte",
+            "",
+            "| Objeto localizado | Banco/fonte | Orgao/entidade | Fornecedor | URL |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    if fontes_com_identificacao:
+        for fonte in fontes_com_identificacao:
+            linhas.append(
+                "| "
+                + " | ".join(
+                    [
+                        _texto(fonte.get("descricao_item")),
+                        _texto(fonte.get("fonte_tipo")),
+                        _texto(fonte.get("orgao")),
+                        _texto(fonte.get("fornecedor") or "Nao informado na fonte"),
+                        _texto(fonte.get("url")),
+                    ]
+                )
+                + " |"
+            )
+    else:
+        linhas.append("| Nenhum objeto com orgao ou fornecedor identificado | - | - | - | - |")
+
     linhas.extend(
         [
             "",

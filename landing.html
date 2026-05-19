@@ -3,192 +3,877 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Icaro | Pesquisa de precos no PNCP</title>
+  <title>Icaro GovLab | Licitacoes publicas com metodo, dados e governanca</title>
   <style>
     :root {
-      --ink: #13232f;
-      --muted: #5c6d76;
-      --line: #dbe5e8;
+      --ink: #13242b;
+      --muted: #607177;
+      --line: #d9e4e5;
+      --paper: #fbfdfc;
       --panel: #ffffff;
-      --soft: #f4f8f9;
-      --blue: #0777b8;
-      --cyan: #15bfd3;
-      --gold: #d4a900;
-      --green: #16845e;
+      --mist: #eef7f5;
+      --aqua: #0e95aa;
+      --blue: #075fa8;
+      --green: #218461;
+      --gold: #c99518;
+      --coral: #cf5f48;
+      --shadow: 0 24px 70px rgba(19, 36, 43, 0.14);
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       color: var(--ink);
-      background: #fbfcfc;
+      background: var(--paper);
       line-height: 1.5;
     }
-    header {
-      min-height: 92vh;
-      display: grid;
-      grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
-      align-items: center;
-      gap: 42px;
-      padding: 34px clamp(22px, 5vw, 82px);
-      border-bottom: 1px solid var(--line);
-      background:
-        linear-gradient(110deg, rgba(244, 248, 249, 0.94), rgba(255, 255, 255, 0.74)),
-        url("/assets/icaro-logo.svg") center right 9vw / min(52vw, 760px) no-repeat;
-    }
-    nav {
+
+    a { color: inherit; }
+
+    .topbar {
       position: absolute;
-      top: 22px;
-      left: clamp(22px, 5vw, 82px);
-      right: clamp(22px, 5vw, 82px);
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 18px;
+      gap: 20px;
+      padding: 22px clamp(20px, 5vw, 72px);
     }
+
     .brand {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 12px;
+      text-decoration: none;
       font-weight: 800;
       letter-spacing: 0;
     }
-    .brand img { width: 54px; height: 34px; object-fit: contain; }
-    .nav-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-    a.button, button {
+
+    .brand img {
+      width: 56px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 1px;
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 40px;
-      padding: 10px 14px;
+      min-height: 42px;
+      padding: 10px 15px;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fff;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.84);
       color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
       text-decoration: none;
-      font-weight: 700;
-      cursor: pointer;
+      white-space: nowrap;
     }
-    a.button.primary {
+
+    .button.primary {
       border-color: var(--blue);
       background: var(--blue);
       color: #fff;
+      box-shadow: 0 14px 34px rgba(7, 95, 168, 0.22);
     }
-    .hero-copy { max-width: 660px; padding-top: 54px; }
+
+    .button.dark {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .hero {
+      min-height: 92vh;
+      display: grid;
+      grid-template-columns: minmax(300px, 0.92fr) minmax(340px, 1.08fr);
+      gap: clamp(28px, 5vw, 68px);
+      align-items: center;
+      padding: 104px clamp(20px, 5vw, 72px) 78px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(112deg, rgba(251, 253, 252, 0.97) 0%, rgba(238, 247, 245, 0.94) 48%, rgba(255, 255, 255, 0.78) 100%),
+        url("assets/icaro-logo.svg") right clamp(10px, 4vw, 60px) center / min(42vw, 560px) no-repeat;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+    }
+
     .eyebrow {
-      margin: 0 0 10px;
+      margin: 0 0 14px;
       color: var(--blue);
-      font-weight: 800;
-      text-transform: uppercase;
       font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
+
     h1 {
       margin: 0;
-      font-size: clamp(46px, 7vw, 88px);
-      line-height: 0.96;
+      max-width: 760px;
+      font-size: clamp(40px, 5.2vw, 66px);
+      line-height: 0.98;
       letter-spacing: 0;
     }
-    .subtitle {
+
+    .lead {
       margin: 22px 0 0;
-      max-width: 580px;
+      max-width: 650px;
       color: var(--muted);
-      font-size: clamp(18px, 2vw, 22px);
+      font-size: clamp(18px, 2vw, 23px);
     }
-    .hero-panel {
-      align-self: end;
-      background: rgba(255, 255, 255, 0.88);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 20px;
-      max-width: 540px;
-      box-shadow: 0 22px 70px rgba(8, 48, 72, 0.12);
-    }
-    .hero-panel h2 { margin: 0 0 8px; font-size: 20px; }
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(120px, 1fr));
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
       gap: 12px;
-      padding: 28px clamp(22px, 5vw, 82px);
-      margin-top: -44px;
-      position: relative;
+      flex-wrap: wrap;
+      margin-top: 28px;
     }
-    .step, .feature {
-      background: var(--panel);
+
+    .atlas-seal {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      padding: 9px 12px;
+      border: 1px solid rgba(201, 149, 24, 0.34);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .atlas-seal img {
+      width: 74px;
+      height: auto;
+    }
+
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(130px, 1fr));
+      gap: 12px;
+      max-width: 650px;
+      margin-top: 34px;
+    }
+
+    .trust-row div {
+      min-height: 94px;
+      padding: 15px;
+      border: 1px solid rgba(217, 228, 229, 0.86);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .trust-row strong {
+      display: block;
+      color: var(--blue);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .trust-row span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .product-visual {
+      align-self: end;
+      display: grid;
+      gap: 14px;
+      width: min(100%, 620px);
+      margin-left: auto;
+    }
+
+    .screen {
+      overflow: hidden;
+      border: 1px solid rgba(217, 228, 229, 0.96);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .screen-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f6faf9;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--green);
+      font-size: 12px;
+    }
+
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+    }
+
+    .screen-body {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .metric {
+      padding: 14px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 16px;
+      background: var(--mist);
     }
-    .step strong, .feature strong { display: block; margin-bottom: 6px; }
-    .step span, .feature span { color: var(--muted); font-size: 14px; }
-    main { padding: 34px clamp(22px, 5vw, 82px) 56px; }
-    .section-title { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin: 20px 0; }
-    .section-title h2 { margin: 0; font-size: 30px; }
-    .section-title p { margin: 0; color: var(--muted); max-width: 620px; }
-    .features { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
-    .feature b { color: var(--blue); }
-    .cta {
-      margin-top: 38px;
+
+    .metric + .metric { margin-top: 10px; }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .pipeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pipe-item {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: #e7f2ff;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .pipe-item strong { display: block; font-size: 14px; }
+    .pipe-item span { color: var(--muted); font-size: 12px; }
+    .score { color: var(--green); font-size: 12px; font-weight: 900; }
+
+    .offer-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap: 1px;
+      margin: -36px clamp(20px, 5vw, 72px) 0;
+      position: relative;
+      z-index: 3;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--line);
+      box-shadow: 0 18px 45px rgba(19, 36, 43, 0.09);
+    }
+
+    .offer-strip article {
+      min-height: 132px;
+      padding: 18px;
+      background: #fff;
+    }
+
+    .offer-strip strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--blue);
+      font-size: 15px;
+    }
+
+    .offer-strip span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    main {
+      padding: 58px 0 0;
+    }
+
+    .band {
+      padding: 58px clamp(20px, 5vw, 72px);
+    }
+
+    .band.tint {
+      background: #eef7f5;
       border-top: 1px solid var(--line);
-      padding-top: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.86fr) minmax(280px, 1fr);
+      gap: 34px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .section-head p,
+    .section-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 22px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.18;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .card .tag {
+      display: inline-flex;
+      margin-bottom: 14px;
+      color: var(--coral);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .method {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.84fr) minmax(320px, 1.16fr);
+      gap: 26px;
+      align-items: start;
+    }
+
+    .method-panel {
+      position: sticky;
+      top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 24px;
+      box-shadow: 0 18px 46px rgba(19, 36, 43, 0.08);
+    }
+
+    .method-panel img {
+      width: 128px;
+      height: 74px;
+      object-fit: contain;
+      margin-bottom: 18px;
+    }
+
+    .method-panel h2 { font-size: clamp(28px, 3vw, 42px); }
+    .method-panel p { color: var(--muted); }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stack-card {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 16px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 18px;
+    }
+
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 900;
+      background: var(--blue);
+    }
+
+    .icon.green { background: var(--green); }
+    .icon.gold { background: var(--gold); }
+    .icon.coral { background: var(--coral); }
+    .icon.aqua { background: var(--aqua); }
+
+    .stack-card h3 {
+      margin: 0 0 5px;
+      font-size: 18px;
+    }
+
+    .stack-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(230px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .plan {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 22px;
+    }
+
+    .plan.featured {
+      border-color: rgba(7, 95, 168, 0.46);
+      box-shadow: var(--shadow);
+    }
+
+    .plan h3 { margin: 0; font-size: 22px; }
+    .plan .price {
+      margin: 12px 0 6px;
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .plan p { color: var(--muted); }
+
+    .plan ul {
+      display: grid;
+      gap: 9px;
+      margin: 14px 0 22px;
+      padding: 0;
+      list-style: none;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .plan li::before {
+      content: "✓";
+      margin-right: 8px;
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .plan .button {
+      margin-top: auto;
+      width: 100%;
+    }
+
+    .quote {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.75fr) minmax(280px, 1.25fr);
+      gap: 26px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 28px;
+      box-shadow: 0 18px 46px rgba(19, 36, 43, 0.08);
+    }
+
+    .quote strong {
+      display: block;
+      color: var(--blue);
+      font-size: 16px;
+    }
+
+    .quote p {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.16;
+      font-weight: 900;
+    }
+
+    .atlas-band {
+      display: grid;
+      grid-template-columns: minmax(240px, 0.7fr) minmax(280px, 1.3fr);
+      gap: 28px;
+      align-items: center;
+      border: 1px solid rgba(201, 149, 24, 0.28);
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0b1320 0%, #13243d 100%);
+      color: #fff;
+      padding: 28px;
+    }
+
+    .atlas-band img {
+      width: min(100%, 230px);
+      height: auto;
+    }
+
+    .atlas-band h2 {
+      color: #fff;
+    }
+
+    .atlas-band p {
+      margin: 12px 0 0;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 17px;
+    }
+
+    .atlas-band .button {
+      margin-top: 20px;
+      background: transparent;
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.34);
+    }
+
+    .final-cta {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      padding: 54px clamp(20px, 5vw, 72px);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .final-cta h2 {
+      max-width: 760px;
+      color: #fff;
+    }
+
+    .final-cta p {
+      max-width: 690px;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 18px;
+    }
+
+    footer {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 18px;
+      gap: 16px;
       flex-wrap: wrap;
+      padding: 22px clamp(20px, 5vw, 72px);
+      color: var(--muted);
+      font-size: 13px;
+      background: #fff;
     }
-    @media (max-width: 920px) {
-      header { grid-template-columns: 1fr; background-size: 86vw; background-position: center top 92px; padding-top: 112px; }
-      .steps, .features { grid-template-columns: 1fr; margin-top: 0; }
-      .section-title { display: block; }
-      nav { align-items: flex-start; }
+
+    @media (max-width: 980px) {
+      .hero,
+      .section-head,
+      .method,
+      .quote,
+      .atlas-band,
+      .final-cta {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 118px;
+        background-size: min(86vw, 520px);
+        background-position: right -38px top 90px;
+      }
+
+      .product-visual { margin-left: 0; }
+      .offer-strip,
+      .grid-3,
+      .plans { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .method-panel { position: static; }
+      .final-cta .button { width: fit-content; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        position: static;
+        padding: 16px 20px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        align-items: flex-start;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 42px 20px 54px;
+      }
+
+      .nav-actions { justify-content: flex-start; }
+      .trust-row,
+      .screen-body {
+        grid-template-columns: 1fr;
+      }
+
+      .offer-strip { margin: 0; border-radius: 0; border-left: 0; border-right: 0; }
+      .band { padding: 44px 20px; }
+      .stack-card { grid-template-columns: 1fr; }
+      .pipe-item { grid-template-columns: 34px 1fr; }
+      .score { grid-column: 2; }
+      .final-cta { padding: 44px 20px; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <nav>
-      <div class="brand"><img src="/assets/icaro-logo.svg" alt="Icaro"><span>Icaro</span></div>
-      <div class="nav-actions">
-        <a class="button" href="/github-page">Pagina GitHub</a>
-        <a class="button primary" href="/">Abrir dashboard</a>
-      </div>
-    </nav>
-    <div class="hero-copy">
-      <p class="eyebrow">Pesquisa de mercado para compras publicas</p>
-      <h1>Icaro</h1>
-      <p class="subtitle">Monte uma cesta de itens, busque valores praticados no PNCP, preserve a origem de cada achado e gere relatorios de pesquisa de mercado com rastreabilidade.</p>
+  <nav class="topbar" aria-label="Navegacao principal">
+    <a class="brand" href="/landing" aria-label="Icaro GovLab">
+      <img src="assets/icaro-logo.svg" alt="Icaro">
+      <span>Icaro GovLab<small>Uma solução AtlasNex</small></span>
+    </a>
+    <div class="nav-actions">
+      <a class="button" href="/atlasnex">AtlasNex</a>
+      <a class="button" href="#metodo">Metodo</a>
+      <a class="button" href="#planos">Planos</a>
+      <a class="button primary" href="/login">Abrir dashboard</a>
     </div>
-    <div class="hero-panel">
-      <h2>Do item ao relatorio</h2>
-      <p>O fluxo foi pensado para equipes que precisam sair de uma planilha ou lista livre e chegar a uma memoria de precos defensavel, com filtros, rascunhos de fonte, revisao por item e exportacao.</p>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Produto para orgaos publicos e equipes de contratacao</p>
+      <h1>Domine licitações públicas com método, dados e governança.</h1>
+      <p class="lead">O Icaro GovLab combina software, metodologia e capacitação aplicada para transformar pesquisa de precos, planejamento da contratacao e governanca documental em uma rotina clara, rastreavel e vendavel para municipios, autarquias e entidades publicas.</p>
+      <div class="hero-cta">
+        <a class="button primary" href="#planos">Ver pacotes comerciais</a>
+        <a class="button" href="#solucao">Conhecer a solucao</a>
+      </div>
+      <div class="atlas-seal">
+        <img src="assets/atlasnex-mark.svg" alt="AtlasNex">
+        <span>Produto vinculado ao ecossistema de inteligência aplicada AtlasNex</span>
+      </div>
+      <div class="trust-row" aria-label="Indicadores de valor">
+        <div><strong>5</strong><span>camadas de maturidade para o processo preparatorio</span></div>
+        <div><strong>360°</strong><span>visao de dados, documentos, riscos e aprendizagem</span></div>
+        <div><strong>14.133</strong><span>aderencia pratica a Lei de Licitacoes e boas rotinas de controle</span></div>
+      </div>
+    </div>
+
+    <div class="product-visual" aria-label="Previa conceitual do painel Icaro">
+      <div class="screen">
+        <div class="screen-top">
+          <span>Mapa de maturidade da contratacao</span>
+          <span class="status">processo monitorado</span>
+        </div>
+        <div class="screen-body">
+          <div>
+            <div class="metric"><span>Itens com fonte rastreada</span><strong>86%</strong></div>
+            <div class="metric"><span>Risco documental</span><strong>baixo</strong></div>
+            <div class="metric"><span>Ganho estimado de tempo</span><strong>42h</strong></div>
+          </div>
+          <div class="pipeline">
+            <div class="pipe-item"><span class="badge">1</span><div><strong>Diagnostico</strong><span>fluxo atual, gargalos e papeis</span></div><span class="score">ok</span></div>
+            <div class="pipe-item"><span class="badge">2</span><div><strong>Pesquisa de precos</strong><span>PNCP, fontes, descartes e memoria</span></div><span class="score">92%</span></div>
+            <div class="pipe-item"><span class="badge">3</span><div><strong>Kit documental</strong><span>ETP, TR, justificativas e anexos</span></div><span class="score">em curso</span></div>
+            <div class="pipe-item"><span class="badge">4</span><div><strong>Capacitacao</strong><span>rotina por papeis e indicadores</span></div><span class="score">agenda</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <section class="steps" aria-label="Fluxo de trabalho">
-    <article class="step"><strong>1. Itens</strong><span>Cadastro manual ou importacao CSV/XLSX.</span></article>
-    <article class="step"><strong>2. PNCP</strong><span>Busca por termo, UF, modalidade e periodo.</span></article>
-    <article class="step"><strong>3. Rascunhos</strong><span>Resultados salvos antes de virarem fonte.</span></article>
-    <article class="step"><strong>4. Revisao</strong><span>Status e pendencias por item da cesta.</span></article>
-    <article class="step"><strong>5. Relatorio</strong><span>DOCX, HTML, Markdown e XLSX.</span></article>
+  <section class="offer-strip" aria-label="Pilares comerciais">
+    <article><strong>Software orientado a processo</strong><span>O Icaro organiza itens, fontes PNCP, calculos, justificativas e relatorios em um fluxo unico.</span></article>
+    <article><strong>Metodo de maturidade</strong><span>Diagnostico, padronizacao e indicadores para reduzir improviso no planejamento das compras.</span></article>
+    <article><strong>Capacitacao aplicada</strong><span>Treinamentos por papel: demandante, compras, controle interno, fiscalizacao e gestores.</span></article>
+    <article><strong>Implantacao rentavel</strong><span>Pacotes claros, recorrencia mensal e upsell por consultoria, templates e suporte premium.</span></article>
   </section>
 
   <main>
-    <div class="section-title">
-      <h2>Base consistente para pesquisa de precos</h2>
-      <p>O Icaro organiza a decisao administrativa em etapas pequenas: encontrar, guardar, validar e documentar cada valor usado.</p>
-    </div>
-    <section class="features">
-      <article class="feature"><strong><b>PNCP com contexto</b></strong><span>Ordenacao por similaridade lexical entre a descricao do item e o objeto da contratacao encontrada.</span></article>
-      <article class="feature"><strong><b>Memoria auditavel</b></strong><span>Cada fonte registra orgao, URL, data, aproveitamento e justificativas.</span></article>
-      <article class="feature"><strong><b>Relatorios reutilizaveis</b></strong><span>Saidas em formatos de trabalho e instrucao formal para revisao interna.</span></article>
-    </section>
-    <div class="cta">
-      <div>
-        <strong>Pronto para parametrizar uma pesquisa?</strong><br>
-        <span>Abra o dashboard e comece por uma cesta de itens.</span>
+    <section class="band" id="solucao">
+      <div class="section-head">
+        <h2>Um produto desenhado para vender clareza onde hoje existe retrabalho.</h2>
+        <p>O comprador publico nao compra apenas tecnologia. Ele compra seguranca, metodo, respaldo documental e reducao de pressao sobre equipes pequenas. O Icaro GovLab empacota tudo isso em uma oferta objetiva para orgaos que querem evoluir em licitacoes sem depender de improviso.</p>
       </div>
-      <a class="button primary" href="/">Abrir dashboard</a>
-    </div>
+      <div class="grid-3">
+        <article class="card"><span class="tag">Dor central</span><h3>Pesquisa de precos fragil</h3><p>Fontes soltas, criterios pouco claros, ausencia de memoria e dificuldade para explicar por que um valor foi aceito ou descartado.</p></article>
+        <article class="card"><span class="tag">Promessa</span><h3>Processo rastreavel</h3><p>Itens, fontes, comparabilidade, calculos e justificativas ficam conectados em uma linha logica facil de auditar.</p></article>
+        <article class="card"><span class="tag">Resultado</span><h3>Equipe mais madura</h3><p>O orgao passa a operar com checklists, indicadores, modelos e rituais de revisao que sobrevivem a trocas de servidores.</p></article>
+      </div>
+    </section>
+
+    <section class="band tint" id="metodo">
+      <div class="method">
+        <aside class="method-panel">
+          <img src="assets/icaro-logo.svg" alt="Marca Icaro">
+          <h2>Ecossistema conceitual Icaro</h2>
+          <p>Além do painel principal, a oferta ganha valor com ferramentas metodologicas que podem virar modulos, oficinas e entregaveis pagos.</p>
+        </aside>
+        <div class="stack">
+          <article class="stack-card"><span class="icon">I</span><div><h3>Icaro Pesquisa</h3><p>Nucleo do produto: cesta de itens, PNCP, fontes aproveitadas, descartes, media, mediana, quadro comparativo e relatorio administrativo.</p></div></article>
+          <article class="stack-card"><span class="icon green">M</span><div><h3>Mapa de Maturidade Licitatoria</h3><p>Diagnostico por eixos: planejamento, pesquisa de precos, gestao documental, matriz de risco, governanca e transparencia.</p></div></article>
+          <article class="stack-card"><span class="icon gold">A</span><div><h3>Ateliê de Processos</h3><p>Oficinas para redesenhar fluxos: quem demanda, quem pesquisa, quem valida, quem assina e quais evidencias entram no processo.</p></div></article>
+          <article class="stack-card"><span class="icon coral">R</span><div><h3>Radar de Riscos e Controle</h3><p>Checklist vivo para alertar incoerencias: baixa comparabilidade, poucas fontes, outliers, ausencia de justificativa e fragilidade do ETP/TR.</p></div></article>
+          <article class="stack-card"><span class="icon aqua">E</span><div><h3>Escola Icaro</h3><p>Trilhas de treinamento com casos reais, simulacoes de pesquisa, modelos de parecer e rotinas para servidores novos e experientes.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="section-head">
+        <h2>Como a oferta vira receita recorrente.</h2>
+        <p>O posicionamento comercial deve unir assinatura do sistema, implantação assistida e serviços de alto valor. Isso permite entrada acessivel, expansão por modulo e contratos maiores com consultoria e capacitação.</p>
+      </div>
+      <div class="grid-2">
+        <article class="card"><span class="tag">Entrada</span><h3>Diagnostico executivo</h3><p>Produto de porta: levantamento rapido dos processos do orgao, pontuacao de maturidade, relatorio de oportunidades e proposta de implantação.</p></article>
+        <article class="card"><span class="tag">Recorrencia</span><h3>Assinatura Icaro</h3><p>Acesso ao painel, atualizacoes, modelos documentais, exportacoes, suporte e indicadores mensais de uso e melhoria.</p></article>
+        <article class="card"><span class="tag">Expansao</span><h3>Implantacao e oficinas</h3><p>Pacotes por secretaria ou municipio inteiro, com treinamento por papeis, revisao de fluxos e customizacao de templates.</p></article>
+        <article class="card"><span class="tag">Premium</span><h3>Governanca assistida</h3><p>Retainer mensal para revisar amostras de processos, orientar melhorias, gerar dashboards executivos e apoiar auditorias internas.</p></article>
+      </div>
+    </section>
+
+    <section class="band tint" id="planos">
+      <div class="section-head">
+        <h2>Pacotes comerciais simples de entender e faceis de contratar.</h2>
+        <p>Valores podem ser ajustados por porte do orgao, volume de processos e nivel de acompanhamento. A estrutura abaixo ajuda a transformar conceito em proposta vendavel.</p>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <h3>Essencial</h3>
+          <div class="price">Entrada</div>
+          <p>Para equipes que precisam organizar a pesquisa de precos e padronizar relatorios.</p>
+          <ul>
+            <li>Acesso ao Icaro Pesquisa</li>
+            <li>Modelos de relatorio e quadro comparativo</li>
+            <li>Treinamento inicial remoto</li>
+            <li>Suporte por chamados</li>
+          </ul>
+          <a class="button" href="/login">Abrir demonstracao</a>
+        </article>
+        <article class="plan featured">
+          <h3>GovLab</h3>
+          <div class="price">Mais vendavel</div>
+          <p>Para municipios e autarquias que querem melhorar processo, equipe e documentação.</p>
+          <ul>
+            <li>Icaro Pesquisa + Mapa de Maturidade</li>
+            <li>Oficina de redesenho do fluxo licitatorio</li>
+            <li>Trilha Escola Icaro para servidores</li>
+            <li>Indicadores mensais para gestores</li>
+          </ul>
+          <a class="button primary" href="/login">Abrir dashboard</a>
+        </article>
+        <article class="plan">
+          <h3>Governanca</h3>
+          <div class="price">Premium</div>
+          <p>Para orgaos que precisam de acompanhamento consultivo e melhoria continua.</p>
+          <ul>
+            <li>Todos os modulos do GovLab</li>
+            <li>Radar de Riscos e Controle</li>
+            <li>Revisao assistida de processos amostrais</li>
+            <li>Relatorio executivo para controle interno</li>
+          </ul>
+          <a class="button dark" href="#contato">Solicitar proposta</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="quote">
+        <div>
+          <strong>Mensagem de venda</strong>
+          <p>O Icaro nao promete substituir a equipe. Ele entrega metodo para a equipe trabalhar melhor.</p>
+        </div>
+        <div class="section-copy">Essa é a tese comercial: vender produtividade com responsabilidade. A compra fica mais facil quando o gestor entende que o produto reduz risco de questionamento, acelera instrução processual e cria capacidade interna permanente.</div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="atlas-band">
+        <div>
+          <img src="assets/atlasnex-mark.svg" alt="AtlasNex">
+        </div>
+        <div>
+          <h2>Icaro GovLab é a linha pública do ecossistema AtlasNex.</h2>
+          <p>A AtlasNex sustenta a arquitetura institucional: inteligência aplicada, governança e produtos especializados. O Icaro ocupa o eixo de licitações públicas, pesquisa de preços, maturidade processual e capacitação.</p>
+          <a class="button" href="/atlasnex">Conhecer o portal AtlasNex</a>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <section class="final-cta" id="contato">
+    <div>
+      <h2>Transforme licitacoes em uma capacidade institucional, nao em uma corrida de ultima hora.</h2>
+      <p>Use o Icaro GovLab para demonstrar maturidade, organizar evidencias e treinar equipes com um produto que une tecnologia, processo e linguagem de controle.</p>
+    </div>
+    <a class="button primary" href="/login">Abrir dashboard</a>
+  </section>
+
+  <footer>
+    <span>Icaro GovLab AtlasNex | Pesquisa de precos, governanca e capacitacao em licitacoes publicas.</span>
+    <span><a href="/atlasnex">AtlasNex</a> | PNCP | Lei 14.133/2021 | processo preparatorio.</span>
+  </footer>
 </body>
 </html>
