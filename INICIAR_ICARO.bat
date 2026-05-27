@@ -30,6 +30,7 @@ if errorlevel 1 (
 echo.
 if "%ICARO_AUTH_USER%"=="" set ICARO_AUTH_USER=admin
 if "%ICARO_AUTH_PASSWORD%"=="" set ICARO_AUTH_PASSWORD=icaro123
+if "%ICARO_AUTH_SECRET%"=="" set ICARO_AUTH_SECRET=segredo-local-dev
 
 echo Iniciando Icaro em http://127.0.0.1:8100
 echo Landing: http://127.0.0.1:8100/

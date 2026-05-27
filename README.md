@@ -25,8 +25,23 @@ Paginas:
 - Login: `http://127.0.0.1:8100/login`
 - Area de trabalho: `http://127.0.0.1:8100/app`
 - Portal AtlasNex: `http://127.0.0.1:8100/atlasnex`
+- Apresentacao Icaro: `http://127.0.0.1:8100/icaro`
 
-## Modulos previstos
+## Stack tecnica
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | FastAPI (Python 3.10+) |
+| Servidor ASGI | Uvicorn |
+| Banco de dados | SQLite |
+| Frontend | HTML/CSS/JS vanilla (SPA em `dashboard.html`) |
+| Exports | openpyxl (XLSX), python-docx (DOCX) |
+| Lint | ruff |
+| Testes | pytest + unittest + httpx |
+| Deploy | Render.com (`render.yaml`) |
+| CI | GitHub Actions |
+
+## Modulos
 
 1. **Cesta de itens**
    - Cadastro individual de itens.
@@ -35,99 +50,184 @@ Paginas:
 
 2. **Pesquisa de precos**
    - Busca de licitacoes e contratacoes similares no PNCP por termo, periodo, UF e modalidade.
-   - Salvamento de resultados PNCP como rascunhos de fonte antes da conversao em amostra aproveitada.
+   - Busca contextual com expansao de queries, similaridade Jaccard e ranqueamento.
+   - Salvamento de resultados PNCP como rascunhos antes da conversao em amostra aproveitada.
    - Vinculo de fontes a cada item da cesta.
-   - Agrupamento por item, unidade, quantidade e localidade.
-   - Memoria de calculo com media, mediana e tratamento de valores extremos.
-   - Registro das fontes consultadas e justificativas.
+   - Memoria de calculo com media, mediana e tratamento de outliers (IQR).
 
 3. **Atas e caronas**
-   - Busca de atas de registro de precos vigentes.
-   - Verificacao inicial de aderencia do objeto.
-   - Controle de vigencia, fornecedor, orgao gerenciador e quantitativos.
-   - Checklist para adesao, conforme regras aplicaveis.
+   - Registro de atas de registro de precos.
+   - Verificacao de aderencia, vigencia, fornecedor e quantitativos.
 
-4. **Processo preparatorio**
-   - Checklist de documentos.
-   - Minutas e modelos de justificativa.
-   - Organizacao do estudo tecnico preliminar, termo de referencia e pesquisa de mercado.
+4. **Comparabilidade e revisao**
+   - Score multi-fator por fonte (similaridade textual + desvio de preco + UF + aprovacao).
+   - Revisao final por item com status (pronto/revisar/pendente).
+   - Checklist administrativo de 12 itens.
 
 5. **Relatorio administrativo**
-   - Relatorio de pesquisa de precos.
-   - Quadro comparativo.
-   - Revisao final por item antes da exportacao.
-   - Justificativa da metodologia.
-   - Registro de descartes de valores inconsistentes, inexequiveis ou excessivos.
+   - Exportacao em Markdown, HTML, DOCX e XLSX.
+   - Quadro comparativo, checklist e comparabilidade incluidos.
 
-## Referencias iniciais
+## Referencias normativas
 
-- Lei nº 14.133/2021, especialmente art. 23.
-- IN SEGES/ME nº 65/2021, sobre pesquisa de precos.
-- Decreto nº 11.462/2023, sobre sistema de registro de precos.
+- Lei n. 14.133/2021, especialmente art. 23.
+- IN SEGES/ME n. 65/2021, sobre pesquisa de precos.
+- Decreto n. 11.462/2023, sobre sistema de registro de precos.
 - Orientacoes e jurisprudencia dos Tribunais de Contas aplicaveis ao ente contratante.
-
-## Estado atual
-
-MVP local com API FastAPI, banco SQLite, cadastro de pesquisas, cesta de itens, importacao CSV/XLSX, rascunhos PNCP, lancamento de fontes por item, calculo de media/mediana, comparabilidade, checklist, revisao final por item, consulta contextual ao PNCP e exportacoes MD/HTML/DOCX/XLSX. O **hub AtlasNex** (`/atlasnex`) agrega links ao Icaro e ao Hermes sem unificar backends.
-
-Para publicar online, use as variaveis `ICARO_AUTH_USER`, `ICARO_AUTH_PASSWORD`, `ICARO_AUTH_SECRET` e `ICARO_COOKIE_SECURE=1`. O guia rapido esta em `DEPLOY_ONLINE.md`.
-
-## AtlasNex (portal do ecossistema)
-
-- URL: `http://127.0.0.1:8100/atlasnex` (mesma estrutura visual do portal Hermes: holding + ecossistema). Apresentação do produto Ícaro: `http://127.0.0.1:8100/icaro`.
-- Cartoes para **Icaro** (abrir em nova aba ou iframe na mesma origem) e **Hermes** (ativado ao salvar a URL em **Integracao**).
-- Manual do usuario: `http://127.0.0.1:8100/icaro-docs/MANUAL_ICARO.md` ou ficheiro `docs/MANUAL_ICARO.md`.
 
 ## Como executar
 
-No Windows, use:
+### Pre-requisitos
+
+- Python 3.10+
+- Variaveis de ambiente obrigatorias:
+
+```bash
+ICARO_AUTH_USER=seu_usuario
+ICARO_AUTH_PASSWORD=sua_senha
+ICARO_AUTH_SECRET=segredo-para-hmac
+```
+
+### Windows (automatico)
 
 ```powershell
 INICIAR_ICARO.bat
 ```
 
-Ou manualmente:
+O script cria o venv, instala dependencias, define defaults locais para as variaveis de auth e inicia o servidor.
 
-```powershell
+### Manual
+
+```bash
 python -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m uvicorn api:app --host 127.0.0.1 --port 8100
+# Linux/Mac: source venv/bin/activate
+# Windows: .\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn api:app --host 127.0.0.1 --port 8100
 ```
 
-Depois acesse:
+### Deploy em producao
 
-```text
-http://127.0.0.1:8100
-http://127.0.0.1:8100/icaro
-http://127.0.0.1:8100/landing
-http://127.0.0.1:8100/github-page
-http://127.0.0.1:8100/atlasnex
+Configure as variaveis de ambiente no seu provedor (Render, Railway, etc.):
+
+```
+ICARO_AUTH_USER=<usuario>
+ICARO_AUTH_PASSWORD=<senha_forte>
+ICARO_AUTH_SECRET=<segredo_longo_aleatorio>
+ICARO_COOKIE_SECURE=1
 ```
 
-## Estrutura
+Guia detalhado: `DEPLOY_ONLINE.md`
+
+## Testes
+
+```bash
+# Definir variaveis antes de rodar
+export ICARO_AUTH_USER=admin
+export ICARO_AUTH_PASSWORD=icaro123
+export ICARO_AUTH_SECRET=test-secret
+
+python -m pytest tests/ -v
+```
+
+Suite atual (20 testes):
+- `test_core_flow.py` — Fluxo principal, auth, PNCP, pricing, similaridade.
+- `test_reports.py` — Exportacao MD, HTML, DOCX, XLSX.
+- `test_upload.py` — Importacao CSV e XLSX via endpoint.
+- `test_atas.py` — CRUD de atas de registro de precos.
+
+## Lint
+
+```bash
+ruff check src/ api.py tests/
+```
+
+Configuracao em `pyproject.toml`.
+
+## CI/CD
+
+GitHub Actions (`.github/workflows/ci.yml`) roda automaticamente em todo push e PR:
+1. Instala dependencias
+2. Roda `ruff check`
+3. Roda `pytest`
+
+## API — Endpoints principais
+
+| Metodo | Rota | Descricao |
+|--------|------|-----------|
+| GET | `/processos?limit=50&offset=0` | Lista processos (paginado) |
+| POST | `/processos` | Criar processo |
+| GET | `/processos/{id}` | Detalhe com itens, fontes, resumo |
+| POST | `/itens` | Criar item |
+| POST | `/itens/importar` | Importar itens via JSON |
+| POST | `/itens/importar-arquivo` | Importar CSV/XLSX |
+| POST | `/fontes` | Registrar fonte de preco |
+| POST | `/atas` | Registrar ata |
+| POST | `/pncp/buscar` | Busca direta no PNCP |
+| POST | `/pncp/buscar-contexto` | Busca contextual com similaridade |
+| POST | `/pncp/rascunhos` | Salvar rascunho PNCP |
+| POST | `/pncp/rascunhos/{id}/fonte` | Converter rascunho em fonte |
+| GET | `/processos/{id}/checklist` | Checklist administrativo |
+| GET | `/processos/{id}/comparabilidade` | Avaliacao de comparabilidade |
+| GET | `/processos/{id}/revisao` | Revisao final por item |
+| GET | `/processos/{id}/export/xlsx` | Exportar XLSX |
+| GET | `/processos/{id}/export/md` | Exportar Markdown |
+| GET | `/processos/{id}/export/html` | Exportar HTML |
+| GET | `/processos/{id}/export/docx` | Exportar DOCX |
+
+## Estrutura do projeto
 
 ```text
-Icaro/
+Projeto_Icaro/
+  .github/
+    workflows/
+      ci.yml                  # Pipeline CI
   assets/
     atlasnex-mark.svg
     icaro-logo.svg
   config/
-  data/
+    fontes_pesquisa.json      # Metadata das fontes suportadas
+  data/                       # SQLite (gitignored)
   docs/
     MANUAL_ICARO.md
-    GITHUB_PAGE_MODELO.md
-  output/
+    ICARO_GOVLAB_PLANO_ESTRATEGICO.md
+    ICARO_GOVLAB_KIT_PRODUTOS.md
+    ICARO_GOVLAB_IDENTIDADE_VISUAL.md
+    ICARO_PROCESSOS_DE_USO.md
+    FONTES_PUBLICAS_PESQUISA_PRECOS.md
+  output/                     # Exports gerados (gitignored)
   src/
-  api.py
-  atlasnex.html
-  github-page.html
-  landing.html
-  icaro-index.html
-  dashboard.html
-  requirements.txt
-  INICIAR_ICARO.bat
-  README.md
-  PLANO_PRODUTO_ICARO.md
-  REFERENCIAS_NORMATIVAS.md
+    config.py                 # Paths (BASE_DIR, DATA_DIR, OUTPUT_DIR, DB_PATH)
+    db.py                     # Persistencia SQLite
+    pncp.py                   # Cliente API PNCP + busca contextual
+    pricing.py                # Calculos estatisticos (IQR, mediana, media)
+    checklist.py              # Geracao de checklist administrativo
+    comparability.py          # Score de comparabilidade
+    review.py                 # Revisao por item
+    reports.py                # Exportacao MD, HTML, DOCX, XLSX
+    text_utils.py             # Normalizacao Unicode + tokenizacao
+  tests/
+    test_core_flow.py
+    test_reports.py
+    test_upload.py
+    test_atas.py
+  api.py                      # Aplicacao FastAPI (entry point)
+  dashboard.html              # SPA frontend
+  landing.html                # Landing page publica
+  atlasnex.html               # Hub AtlasNex
+  icaro-index.html            # Apresentacao do produto
+  github-page.html            # GitHub Pages
+  requirements.txt            # Dependencias Python
+  pyproject.toml              # Config ruff
+  render.yaml                 # Deploy Render.com
+  INICIAR_ICARO.bat           # Launcher Windows
+  PLANO_PRODUTO_ICARO.md      # Visao de produto
+  DEPLOY_ONLINE.md            # Guia de deploy
+  REFERENCIAS_NORMATIVAS.md   # Base legal
 ```
+
+## AtlasNex (portal do ecossistema)
+
+- URL: `http://127.0.0.1:8100/atlasnex`
+- Cartoes para **Icaro** e **Hermes** (ativado ao salvar a URL em Integracao).
+- Manual do usuario: `http://127.0.0.1:8100/icaro-docs/MANUAL_ICARO.md`

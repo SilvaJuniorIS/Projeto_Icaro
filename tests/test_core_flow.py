@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+# Set auth env vars before importing the app
+os.environ.setdefault("ICARO_AUTH_USER", "admin")
+os.environ.setdefault("ICARO_AUTH_PASSWORD", "icaro123")
+os.environ.setdefault("ICARO_AUTH_SECRET", "test-secret")
 
 from fastapi.testclient import TestClient
 

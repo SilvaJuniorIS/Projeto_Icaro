@@ -48,24 +48,7 @@ def _texto(value: Any) -> str:
     return text or "-"
 
 
-def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
-    snapshot = export_snapshot(processo_id)
-    if not snapshot:
-        return None
-
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    processo: dict[str, Any] = snapshot["processo"]
-    resumo: dict[str, Any] = snapshot["resumo"]
-    resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
-    itens: list[dict[str, Any]] = snapshot.get("itens", [])
-    resumo_itens: list[dict[str, Any]] = snapshot.get("resumo_itens", [])
-    fontes: list[dict[str, Any]] = snapshot["fontes"]
-    atas: list[dict[str, Any]] = snapshot["atas"]
-    checklist = gerar_checklist(snapshot)
-    comparabilidade = avaliar_comparabilidade(snapshot)
-
+def _build_markdown_lines(processo, resumo, resumo_atas, resumo_itens, fontes, atas, checklist, comparabilidade, snapshot) -> list[str]:
     linhas = [
         f"# Relatorio de pesquisa de mercado - {_texto(processo.get('titulo'))}",
         "",
@@ -246,6 +229,28 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
         ]
     )
 
+    return linhas
+
+
+def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:
+    snapshot = export_snapshot(processo_id)
+    if not snapshot:
+        return None
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    processo: dict[str, Any] = snapshot["processo"]
+    resumo: dict[str, Any] = snapshot["resumo"]
+    resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
+    resumo_itens: list[dict[str, Any]] = snapshot.get("resumo_itens", [])
+    fontes: list[dict[str, Any]] = snapshot["fontes"]
+    atas: list[dict[str, Any]] = snapshot["atas"]
+    checklist = gerar_checklist(snapshot)
+    comparabilidade = avaliar_comparabilidade(snapshot)
+
+    linhas = _build_markdown_lines(processo, resumo, resumo_atas, resumo_itens, fontes, atas, checklist, comparabilidade, snapshot)
+
     filename = f"icaro_relatorio_{processo_id}_{_safe_name(processo['titulo'])}_{now_iso().replace(':', '-')}.md"
     path = output_dir / filename
     path.write_text("\n".join(linhas), encoding="utf-8")
@@ -253,10 +258,25 @@ def gerar_relatorio_markdown(processo_id: int, output_dir: Path | str = OUTPUT_D
 
 
 def _markdown_relatorio(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> str | None:
-    path = gerar_relatorio_markdown(processo_id, output_dir)
-    if not path:
+    """Generate markdown content in memory (does not write to disk)."""
+    snapshot = export_snapshot(processo_id)
+    if not snapshot:
         return None
-    return path.read_text(encoding="utf-8")
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    processo: dict[str, Any] = snapshot["processo"]
+    resumo: dict[str, Any] = snapshot["resumo"]
+    resumo_atas: dict[str, Any] = snapshot["resumo_atas"]
+    resumo_itens: list[dict[str, Any]] = snapshot.get("resumo_itens", [])
+    fontes: list[dict[str, Any]] = snapshot["fontes"]
+    atas: list[dict[str, Any]] = snapshot["atas"]
+    checklist = gerar_checklist(snapshot)
+    comparabilidade = avaliar_comparabilidade(snapshot)
+
+    linhas = _build_markdown_lines(processo, resumo, resumo_atas, resumo_itens, fontes, atas, checklist, comparabilidade, snapshot)
+    return "\n".join(linhas)
 
 
 def gerar_relatorio_html(processo_id: int, output_dir: Path | str = OUTPUT_DIR) -> Path | None:

@@ -175,17 +175,25 @@ def create_processo(payload: dict[str, Any], db_path: Path | str = DB_PATH) -> i
         return int(cur.lastrowid)
 
 
-def list_processos(db_path: Path | str = DB_PATH) -> list[dict[str, Any]]:
+def list_processos(db_path: Path | str = DB_PATH, limit: int = 50, offset: int = 0) -> dict[str, Any]:
     init_db(db_path)
     with connect(db_path) as conn:
+        total = conn.execute("SELECT COUNT(*) FROM processos").fetchone()[0]
         rows = conn.execute(
             """
             SELECT *
             FROM processos
             ORDER BY updated_at DESC, id DESC
-            """
+            LIMIT ? OFFSET ?
+            """,
+            (limit, offset),
         ).fetchall()
-    return [dict(row) for row in rows]
+    return {
+        "items": [dict(row) for row in rows],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 def get_processo(processo_id: int, db_path: Path | str = DB_PATH) -> dict[str, Any] | None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hmac
 import os
+from contextlib import asynccontextmanager
 from io import BytesIO, StringIO
 from typing import Any
 
@@ -48,14 +49,33 @@ from src.reports import gerar_relatorio_docx, gerar_relatorio_html, gerar_relato
 from src.review import gerar_revisao_itens
 
 
-app = FastAPI(title="Icaro")
+def _require_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(
+            f"Variavel de ambiente obrigatoria nao definida: {name}. "
+            "Configure-a antes de iniciar a aplicacao."
+        )
+    return value
+
+
+AUTH_USER: str = _require_env("ICARO_AUTH_USER")
+AUTH_PASSWORD: str = _require_env("ICARO_AUTH_PASSWORD")
+AUTH_SECRET: str = _require_env("ICARO_AUTH_SECRET")
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Icaro", lifespan=lifespan)
 app.mount("/assets", StaticFiles(directory=BASE_DIR / "assets"), name="assets")
 app.mount("/icaro-docs", StaticFiles(directory=BASE_DIR / "docs"), name="icaro_docs")
 
 AUTH_COOKIE = "icaro_session"
-AUTH_USER = os.getenv("ICARO_AUTH_USER", "admin")
-AUTH_PASSWORD = os.getenv("ICARO_AUTH_PASSWORD", "icaro123")
-AUTH_SECRET = os.getenv("ICARO_AUTH_SECRET", "troque-este-segredo-em-producao")
+
 PUBLIC_PATHS = {
     "/",
     "/landing",
@@ -280,11 +300,6 @@ class RascunhoFonteRequest(BaseModel):
     observacoes: str = "Fonte criada a partir de rascunho PNCP."
 
 
-@app.on_event("startup")
-def startup() -> None:
-    init_db()
-
-
 @app.get("/", response_class=HTMLResponse)
 def home() -> str:
     return (BASE_DIR / "landing.html").read_text(encoding="utf-8")
@@ -350,8 +365,8 @@ def health() -> dict[str, str]:
 
 
 @app.get("/processos")
-def processos() -> list[dict[str, Any]]:
-    return list_processos()
+def processos(limit: int = 50, offset: int = 0) -> dict[str, Any]:
+    return list_processos(limit=limit, offset=offset)
 
 
 @app.post("/processos")
