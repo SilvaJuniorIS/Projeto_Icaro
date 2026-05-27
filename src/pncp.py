@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+from time import sleep
 from typing import Any
 
 import requests
@@ -10,6 +11,9 @@ from src.text_utils import palavras_texto, tokens_texto
 
 BASE_URL = "https://pncp.gov.br/api/consulta"
 MODALIDADE_PADRAO = "6"
+PNCP_TIMEOUT = (6, 30)
+PNCP_RETRIES = 2
+_PNCP_CACHE: dict[tuple[tuple[str, str], ...], dict[str, Any]] = {}
 MODALIDADES_ESTRATEGIA = {
     "precisa": ["6"],
     "equilibrada": ["6", "8", "7", "4"],
@@ -215,6 +219,28 @@ def _dias_desde_publicacao(data_publicacao: str) -> int | None:
     return None
 
 
+def _cache_key(params: dict[str, Any]) -> tuple[tuple[str, str], ...]:
+    return tuple(sorted((str(k), str(v)) for k, v in params.items()))
+
+
+def _consultar_pncp(url: str, params: dict[str, Any]) -> tuple[Any, dict[str, Any]]:
+    ultimo_erro: requests.RequestException | None = None
+    for tentativa in range(PNCP_RETRIES + 1):
+        try:
+            response = requests.get(url, params=params, timeout=PNCP_TIMEOUT)
+            response.raise_for_status()
+            return response, response.json()
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            ultimo_erro = exc
+            if tentativa < PNCP_RETRIES:
+                sleep(0.7 * (tentativa + 1))
+                continue
+            raise
+    if ultimo_erro:
+        raise ultimo_erro
+    raise requests.RequestException("Falha desconhecida ao consultar PNCP")
+
+
 def _pontuar_resultado(item: dict[str, Any], referencia: str) -> dict[str, Any]:
     texto = _texto_busca_item(item)
     similaridade = similaridade_jaccard(referencia, texto)
@@ -296,6 +322,9 @@ def buscar_contratacoes_contextual(
                     if err not in erros_parciais:
                         erros_parciais.append(err)
                     continue
+                aviso = str(pacote.get("aviso") or "")
+                if aviso and aviso not in erros_parciais:
+                    erros_parciais.append(aviso)
                 partes_label = [consulta, f"modalidade {modalidade}"]
                 if filtro_uf:
                     partes_label.append(filtro_uf)
@@ -325,6 +354,8 @@ def buscar_contratacoes_contextual(
             "erro": erros_parciais[0],
             "erros_parciais": erros_parciais,
             "consultas": consultas,
+            "modalidades": modalidades,
+            "chamadas": chamadas,
             "resultados": [],
             "texto_referencia": referencia,
         }
@@ -395,18 +426,36 @@ def buscar_contratacoes(
         params["codigoModalidadeContratacao"] = modalidade_codigo
 
     url = f"{BASE_URL}/v1/contratacoes/publicacao"
+    cache_key = _cache_key(params)
     try:
-        response = requests.get(url, params=params, timeout=12)
-        response.raise_for_status()
-        payload = response.json()
+        response, payload = _consultar_pncp(url, params)
+        _PNCP_CACHE[cache_key] = {"url": response.url, "payload": payload}
     except requests.RequestException as exc:
         fonte = getattr(exc.response, "url", None) or getattr(response, "url", None) if "response" in locals() else url
+        cached = _PNCP_CACHE.get(cache_key)
+        if cached:
+            payload = cached["payload"]
+            response_url = cached["url"]
+            dados = payload.get("data") or payload.get("content") or payload.get("resultado") or []
+            resultados = _filtrar_resultados_por_termo([_normalizar_item(item) for item in dados], termo, estrito=filtrar_termo)
+            return {
+                "ok": True,
+                "fonte": response_url,
+                "pagina": payload.get("pagina") or pagina,
+                "total_registros": payload.get("totalRegistros") or payload.get("totalElements"),
+                "resultados": resultados[:tamanho_solicitado],
+                "aviso": "PNCP demorou a responder; usando cache temporario desta sessao.",
+            }
         detalhe = ""
         if getattr(exc, "response", None) is not None:
             detalhe = (exc.response.text or "").strip()[:300]
+        if isinstance(exc, requests.Timeout):
+            erro = "PNCP demorou a responder. Tente novamente, reduza a estrategia para Precisa ou informe uma UF/modalidade."
+        else:
+            erro = f"Falha ao consultar PNCP: {exc}"
         return {
             "ok": False,
-            "erro": f"Falha ao consultar PNCP: {exc}" + (f" | Detalhe: {detalhe}" if detalhe else ""),
+            "erro": erro + (f" | Detalhe: {detalhe}" if detalhe else ""),
             "fonte": fonte,
             "resultados": [],
         }
