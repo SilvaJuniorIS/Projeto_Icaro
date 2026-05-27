@@ -114,15 +114,16 @@ def _login_page(erro: str = "") -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Icaro - Login</title>
     <style>
-        :root {{ --bg:#f5f7fb; --ink:#172033; --muted:#667085; --blue:#1769aa; --line:#d8e0ea; --surface:#fff; }}
+        :root {{ --bg:#dfe9ee; --ink:#172033; --muted:#586a73; --blue:#1769aa; --line:#c8d6df; --surface:#f8fbfc; }}
         * {{ box-sizing: border-box; }}
         body {{
             margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
-            font-family: Inter, Arial, sans-serif; color: var(--ink); background: var(--bg);
+            font-family: Inter, Arial, sans-serif; color: var(--ink);
+            background: linear-gradient(145deg, #d4e1e8 0%, #eef5f7 48%, #cbdbe3 100%);
         }}
         main {{
             width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line);
-            border-radius: 8px; padding: 28px; box-shadow: 0 18px 50px rgba(23,32,51,.08);
+            border-radius: 8px; padding: 28px; box-shadow: 0 18px 50px rgba(23,32,51,.16);
         }}
         h1 {{ margin: 0 0 8px; font-size: 28px; }}
         p {{ margin: 0 0 22px; color: var(--muted); line-height: 1.5; }}
