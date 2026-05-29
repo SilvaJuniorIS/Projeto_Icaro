@@ -660,7 +660,7 @@
                         </div>
                     </div>
                     <div class="panel-body">
-                        <p class="lead">Use esta aba como ponto de partida. A pesquisa ativa aparece no topo, as metricas ficam sempre visiveis e os atalhos abaixo abrem cada etapa sem rolagem longa.</p>
+                        <p class="lead">Use esta aba como ponto de partida. A pesquisa define o objeto central, os itens detalham o que sera cotado individualmente e as atas verificam oportunidades de carona para o objeto geral.</p>
                         <div class="actions">
                             <button type="button" class="primary" onclick="showTab('pesquisa')">Criar ou selecionar pesquisa</button>
                             <button type="button" onclick="showTab('itens')">Cadastrar itens</button>
@@ -680,10 +680,10 @@
                     </div>
                     <div class="panel-body">
                         <div class="list">
-                            <div class="processo-item"><strong>1. Pesquisa</strong><small>Crie ou selecione o processo de pesquisa de mercado.</small></div>
-                            <div class="processo-item"><strong>2. Itens</strong><small>Cadastre a cesta e escolha um item ativo para trabalhar.</small></div>
-                            <div class="processo-item"><strong>3. PNCP e fontes</strong><small>Busque referencias, salve rascunhos e valide valores unitarios.</small></div>
-                            <div class="processo-item"><strong>4. Revisao e relatorios</strong><small>Confira pendencias, comparabilidade e gere os arquivos finais.</small></div>
+                            <div class="processo-item"><strong>1. Pesquisa</strong><small>Defina o objeto central, como material de informatica ou material de expediente.</small></div>
+                            <div class="processo-item"><strong>2. Itens</strong><small>Cadastre itens mais especificos que o objeto, como HD, pendrive ou monitor.</small></div>
+                            <div class="processo-item"><strong>3. PNCP e fontes</strong><small>Busque cada item separadamente e registre valor unitario, orgao e fornecedor quando houver.</small></div>
+                            <div class="processo-item"><strong>4. Atas e relatorios</strong><small>Pesquise atas vigentes pelo objeto central e documente carona, vigencia, fornecedor e orgao gerenciador.</small></div>
                         </div>
                     </div>
                 </div>
@@ -705,7 +705,7 @@
                                     <input id="titulo" required placeholder="ex: Cesta de material de escritorio">
                                 </label>
                                 <label class="wide">
-                                    <span>Objeto geral</span>
+                                    <span>Objeto central da pesquisa</span>
                                     <textarea id="descricaoObjeto" required placeholder="Descreva a finalidade da pesquisa e a familia de itens"></textarea>
                                 </label>
                                 <label>
@@ -780,8 +780,8 @@
                                     <input id="itemCategoria" placeholder="ex: material de consumo">
                                 </label>
                                 <label class="wide">
-                                    <span>Descricao do item</span>
-                                    <textarea id="itemDescricao" required placeholder="Descreva o item como ele deve ser pesquisado"></textarea>
+                                    <span>Descricao especifica do item</span>
+                                    <textarea id="itemDescricao" required placeholder="Ex.: HD SSD 480GB SATA, pendrive 64GB USB 3.0, monitor LED 24 polegadas"></textarea>
                                 </label>
                                 <label class="wide">
                                     <span>Termo de busca PNCP</span>
@@ -1101,7 +1101,7 @@
                     <div class="panel-title">
                         <div>
                             <span>Ata de registro de precos</span>
-                            <h3>Registrar possibilidade de carona</h3>
+                            <h3>Buscar e registrar possibilidade de carona</h3>
                         </div>
                         <span class="badge" id="atasResumoBadge">0 atas</span>
                     </div>
@@ -1168,6 +1168,8 @@
                             </div>
                             <div class="actions">
                                 <button class="primary" type="submit">Adicionar ata</button>
+                                <button type="button" onclick="abrirBuscaAtasPncp()">Buscar atas vigentes no PNCP</button>
+                                <button type="button" onclick="preencherAtaComObjetoCentral()">Usar objeto central</button>
                             </div>
                         </form>
                     </div>
@@ -1291,6 +1293,7 @@
         let processos = [];
         let itens = [];
         let processoSelecionado = null;
+        let processoAtual = null;
         let itemSelecionado = null;
         let resumoItensCache = [];
         let ultimosResultadosPncp = [];
@@ -1528,6 +1531,7 @@
 
         async function carregarProcessoSelecionado() {
             if (!processoSelecionado) {
+                processoAtual = null;
                 document.getElementById('processoSelecionadoBadge').textContent = 'Nenhum processo';
                 document.getElementById('itemSelecionadoBadge').textContent = 'Nenhum item';
                 document.getElementById('listaItens').innerHTML = '<p>Crie uma pesquisa antes de adicionar itens.</p>';
@@ -1549,6 +1553,7 @@
             }
             const res = await api(`/processos/${processoSelecionado}`);
             const data = await res.json();
+            processoAtual = data.processo;
             itens = data.itens || [];
             if (!itemSelecionado && itens.length) {
                 itemSelecionado = itens[0].id;
@@ -1582,6 +1587,36 @@
             const vigentes = resumo?.atas_vigentes || 0;
             const aderentes = resumo?.atas_potencialmente_aderentes || 0;
             document.getElementById('atasResumoBadge').textContent = `${total} atas | ${vigentes} vigentes | ${aderentes} aderentes`;
+        }
+
+        function termoObjetoCentral() {
+            const p = processoAtual || processos.find(x => Number(x.id) === Number(processoSelecionado));
+            return (p?.descricao_objeto || p?.titulo || '').trim();
+        }
+
+        function preencherAtaComObjetoCentral() {
+            const termo = termoObjetoCentral();
+            if (!termo) {
+                setStatus('Selecione uma pesquisa com objeto central preenchido.');
+                return;
+            }
+            const campo = document.getElementById('ataObjeto');
+            if (campo && !campo.value.trim()) {
+                campo.value = termo;
+            }
+            setStatus('Objeto central aplicado ao registro da ata.');
+        }
+
+        function abrirBuscaAtasPncp() {
+            const termo = termoObjetoCentral();
+            if (!termo) {
+                setStatus('Selecione uma pesquisa com objeto central antes de buscar atas.');
+                return;
+            }
+            const url = `https://pncp.gov.br/app/atas?pagina=1&q=${encodeURIComponent(termo)}&status=vigente`;
+            window.open(url, '_blank', 'noopener');
+            preencherAtaComObjetoCentral();
+            setStatus('Busca de atas vigentes aberta no PNCP. Registre aqui a ata aderente ao objeto central.');
         }
 
         function renderFontes(fontes) {
