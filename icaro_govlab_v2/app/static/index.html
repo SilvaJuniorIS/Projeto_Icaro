@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icaro GovLab v2</title>
+  <style>
+    :root {
+      --bg: #eef4f6;
+      --surface: #fbfdfd;
+      --ink: #162633;
+      --muted: #637381;
+      --line: #cfdee5;
+      --blue: #1769aa;
+      --green: #23795a;
+      --red: #a33b37;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; color: var(--ink); background: var(--bg); }
+    header { padding: 22px clamp(16px, 4vw, 48px); background: #122235; color: #fff; }
+    header h1 { margin: 0 0 6px; font-size: 28px; }
+    header p { margin: 0; color: #c8d6df; }
+    main { padding: 18px clamp(16px, 4vw, 48px) 48px; display: grid; gap: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .panel h2 { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 18px; }
+    .body { padding: 14px 16px; }
+    label { display: grid; gap: 6px; margin-bottom: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    input, textarea, select { width: 100%; min-height: 38px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; font: inherit; color: var(--ink); background: #fff; }
+    textarea { min-height: 76px; resize: vertical; }
+    button { min-height: 38px; border: 1px solid var(--blue); border-radius: 6px; padding: 8px 12px; background: var(--blue); color: #fff; font-weight: 800; cursor: pointer; }
+    button.secondary { background: #fff; color: var(--blue); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .list { display: grid; gap: 8px; }
+    .item { border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: #fff; cursor: pointer; }
+    .item.active { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue); }
+    .item strong, .item span { display: block; }
+    .item span { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-top: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #edf4f7; }
+    .status { min-height: 24px; color: var(--green); font-weight: 700; }
+    .warn { color: var(--red); }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 12px; }
+    .search-box { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 14px; background: #f6fafb; }
+    .search-box h3 { margin: 0 0 10px; font-size: 15px; }
+    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .folder-title { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .code { color: var(--blue); font-weight: 800; font-size: 12px; }
+    .tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 12px; }
+    .tab { flex: 0 0 auto; min-height: 36px; border: 1px solid var(--line); border-bottom-color: var(--line); border-radius: 6px 6px 0 0; background: #eef4f6; color: var(--ink); padding: 8px 12px; font-weight: 800; cursor: pointer; }
+    .tab.active { background: #fff; border-color: var(--blue); color: var(--blue); box-shadow: inset 0 3px 0 var(--blue); }
+    .tab-panel { border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 12px; }
+    .tab-panel h3 { margin: 0 0 6px; font-size: 16px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 13px; }
+    .meta span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #f6fafb; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Icaro GovLab v2</h1>
+    <p>CESTA -> ITENS -> FONTES -> VALORES -> MEMORIA DE CALCULO</p>
+  </header>
+  <main>
+    <div class="status" id="status">Pronto.</div>
+    <section class="grid">
+      <div class="panel">
+        <h2>1. Cesta dinamica</h2>
+        <div class="body">
+          <label>Titulo <input id="basketTitle" placeholder="Cesta de pneus"></label>
+          <label>Objeto central <textarea id="basketObject" placeholder="Aquisição de pneus para manutenção veicular"></textarea></label>
+          <label>Categoria <input id="basketCategory" placeholder="Manutenção veicular"></label>
+          <label>Contexto da contratação <textarea id="basketContext" placeholder="Necessidade administrativa, local, prazo e finalidade"></textarea></label>
+          <div class="actions">
+            <button onclick="createBasket()">Criar cesta</button>
+            <button class="secondary" onclick="loadBaskets()">Atualizar</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Cestas</h2>
+        <div class="body"><div class="list" id="basketList"></div></div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="panel">
+        <h2>2. Item individual</h2>
+        <div class="body">
+          <label>Lote/categoria <input id="itemLot" placeholder="Lote 1 - pneus passeio"></label>
+          <label>Descrição <textarea id="itemDescription" placeholder="Pneu 205/55 R16"></textarea></label>
+          <label>Unidade <input id="itemUnit" value="unidade"></label>
+          <label>Quantidade <input id="itemQuantity" type="number" min="0.01" step="0.01" value="1"></label>
+          <label>CATMAT/CATSER <input id="itemCatalog" placeholder="quando aplicável"></label>
+          <label>Observações técnicas <textarea id="itemNotes" placeholder="Medidas, composição, aplicação, padrão mínimo"></textarea></label>
+          <button onclick="createItem()">Adicionar item</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 id="itemFolderTitle">Pasta da cesta: selecione uma cesta</h2>
+        <div class="body">
+          <div class="tabs" id="itemTabs"></div>
+          <div id="itemTabPanel" class="tab-panel">Nenhum item selecionado.</div>
+        </div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="panel">
+        <h2>3. Fonte rastreável e valor</h2>
+        <div class="body">
+          <div class="search-box">
+            <h3>Busca automatica de valores unitarios</h3>
+            <p class="hint">O sistema consulta PNCP e Compras.gov/SIASG por item e salva apenas resultados com valor unitario e contexto rastreavel.</p>
+            <label>Termos de busca <input id="searchQuery" placeholder="deixe vazio para usar as palavras-chave do item"></label>
+            <div class="cols">
+              <label>Data inicial <input id="searchStart" placeholder="20250101"></label>
+              <label>Data final <input id="searchEnd" placeholder="20260609"></label>
+              <label>Quantidade de resultados <input id="searchSize" type="number" min="1" max="50" value="20"></label>
+            </div>
+            <div class="actions">
+              <button onclick="searchItemValues()">Buscar valores na internet</button>
+            </div>
+          </div>
+          <p class="hint">Entrada manual complementar. O caminho principal do produto e gerar a lista de valores por busca automatica.</p>
+          <label>Tipo da fonte
+            <select id="sourceType">
+              <option value="pncp">PNCP</option>
+              <option value="compras_gov">Compras.gov</option>
+              <option value="ata_publica">Ata pública</option>
+              <option value="contrato">Contrato administrativo</option>
+              <option value="portal_transparencia">Portal transparência</option>
+              <option value="fornecedor">Fornecedor</option>
+              <option value="referencial">Tabela referencial</option>
+            </select>
+          </label>
+          <label>Origem identificável <input id="sourceOrigin" placeholder="PNCP, Município X, Compras.gov"></label>
+          <label>URL <input id="sourceUrl" placeholder="https://..."></label>
+          <label>Órgão <input id="sourceOrg"></label>
+          <label>Fornecedor <input id="sourceSupplier"></label>
+          <label>Modalidade <input id="sourceModality"></label>
+          <label>Número do processo <input id="sourceProcess"></label>
+          <label>Contexto da contratação <textarea id="sourceContext" placeholder="Objeto encontrado, compatibilidade e contexto"></textarea></label>
+          <label>Valor unitário <input id="sourceUnitPrice" type="number" min="0.01" step="0.01"></label>
+          <label>Quantidade <input id="sourceQuantity" type="number" min="0.01" step="0.01" value="1"></label>
+          <label>Unidade <input id="sourceUnit" value="unidade"></label>
+          <div class="actions">
+            <button onclick="createSource()">Salvar fonte e valor</button>
+            <button class="secondary" onclick="compareText()">Comparar descrições</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Fontes do item</h2>
+        <div class="body">
+          <table>
+            <thead><tr><th>Origem</th><th>Órgão</th><th>Fornecedor</th><th>Valor</th><th>Validação</th></tr></thead>
+            <tbody id="sourceTable"></tbody>
+          </table>
+          <pre id="searchOutput"></pre>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>4. Memória de cálculo</h2>
+      <div class="body">
+        <div class="actions">
+          <button onclick="calculate()">Gerar memória</button>
+          <button class="secondary" onclick="downloadReport()">Exportar relatório técnico</button>
+        </div>
+        <pre id="memoryOutput"></pre>
+      </div>
+    </section>
+  </main>
+  <script>
+    let selectedBasket = null;
+    let selectedItem = null;
+    let baskets = [];
+    let items = [];
+
+    function setStatus(message, warn = false) {
+      const el = document.getElementById('status');
+      el.textContent = message;
+      el.className = warn ? 'status warn' : 'status';
+    }
+
+    async function api(url, options = {}) {
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+      return data;
+    }
+
+    async function loadBaskets() {
+      const data = await api('/api/baskets');
+      baskets = data.baskets || [];
+      const list = document.getElementById('basketList');
+      list.innerHTML = '';
+      baskets.forEach(basket => {
+        const div = document.createElement('div');
+        div.className = `item ${selectedBasket === basket.id ? 'active' : ''}`;
+        div.onclick = () => selectBasket(basket.id);
+        div.innerHTML = `<div class="folder-title"><strong>${basket.title}</strong><span class="code">${basket.basket_code || ('ICR-' + basket.id)}</span></div><span>${basket.item_count || 0} item(ns) | ${basket.central_object}</span>`;
+        list.appendChild(div);
+      });
+      if (!baskets.length) list.innerHTML = '<span>Nenhuma cesta criada.</span>';
+    }
+
+    async function selectBasket(id) {
+      selectedBasket = id;
+      const preferredItem = selectedItem;
+      const data = await api(`/api/baskets/${id}`);
+      items = data.items || [];
+      selectedItem = items.some(item => item.id === preferredItem) ? preferredItem : null;
+      document.getElementById('itemFolderTitle').textContent = `Pasta da cesta ${data.basket.basket_code}: ${data.basket.title}`;
+      renderItems();
+      await loadBaskets();
+      if (items.length) await selectItem(items[0].id);
+      setStatus(`Cesta selecionada: ${data.basket.title}`);
+    }
+
+    async function createBasket() {
+      const data = await api('/api/baskets', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          title: document.getElementById('basketTitle').value,
+          central_object: document.getElementById('basketObject').value,
+          category: document.getElementById('basketCategory').value,
+          contracting_context: document.getElementById('basketContext').value
+        })
+      });
+      selectedBasket = data.basket.id;
+      await loadBaskets();
+      await selectBasket(selectedBasket);
+    }
+
+    async function createItem() {
+      if (!selectedBasket) return setStatus('Selecione uma cesta primeiro.', true);
+      const data = await api('/api/items', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          basket_id: selectedBasket,
+          lot_group: document.getElementById('itemLot').value,
+          description: document.getElementById('itemDescription').value,
+          unit: document.getElementById('itemUnit').value,
+          quantity: Number(document.getElementById('itemQuantity').value || 1),
+          catmat_catser: document.getElementById('itemCatalog').value,
+          technical_notes: document.getElementById('itemNotes').value
+        })
+      });
+      selectedItem = data.item.id;
+      document.getElementById('itemLot').value = '';
+      document.getElementById('itemDescription').value = '';
+      document.getElementById('itemUnit').value = 'unidade';
+      document.getElementById('itemQuantity').value = '1';
+      document.getElementById('itemCatalog').value = '';
+      document.getElementById('itemNotes').value = '';
+      await selectBasket(selectedBasket);
+      await selectItem(selectedItem);
+    }
+
+    function renderItems() {
+      const tabs = document.getElementById('itemTabs');
+      const panel = document.getElementById('itemTabPanel');
+      tabs.innerHTML = '';
+      items.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `tab ${selectedItem === item.id ? 'active' : ''}`;
+        button.onclick = () => selectItem(item.id);
+        button.textContent = item.description || `Item ${item.id}`;
+        tabs.appendChild(button);
+      });
+      if (!items.length) {
+        tabs.innerHTML = '<span>Nenhum item cadastrado.</span>';
+        panel.textContent = 'Adicione itens para iniciar a pesquisa de valores.';
+        renderSources([]);
+        return;
+      }
+      const item = items.find(i => i.id === selectedItem);
+      if (!item) {
+        panel.textContent = 'Selecione uma aba de item.';
+        return;
+      }
+      panel.innerHTML = `
+        <h3>${item.description}</h3>
+        <div class="meta">
+          <span>${item.quantity} ${item.unit}</span>
+          <span>${item.lot_group || 'sem lote'}</span>
+          <span>${item.catmat_catser || 'sem CATMAT/CATSER'}</span>
+        </div>
+        <p class="hint">${item.technical_notes || 'Sem observacoes tecnicas.'}</p>
+      `;
+    }
+
+    async function selectItem(id) {
+      selectedItem = id;
+      renderItems();
+      const data = await api(`/api/items/${id}`);
+      renderSources(data.sources || []);
+      setStatus(`Item selecionado: ${data.item.description}`);
+    }
+
+    async function createSource() {
+      if (!selectedItem) return setStatus('Selecione um item primeiro.', true);
+      await api('/api/sources', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          basket_item_id: selectedItem,
+          source_type: document.getElementById('sourceType').value,
+          origin: document.getElementById('sourceOrigin').value,
+          url: document.getElementById('sourceUrl').value,
+          organization: document.getElementById('sourceOrg').value,
+          supplier: document.getElementById('sourceSupplier').value,
+          modality: document.getElementById('sourceModality').value,
+          process_number: document.getElementById('sourceProcess').value,
+          contracting_context: document.getElementById('sourceContext').value,
+          unit_price: Number(document.getElementById('sourceUnitPrice').value || 0),
+          quantity: Number(document.getElementById('sourceQuantity').value || 1),
+          unit: document.getElementById('sourceUnit').value
+        })
+      });
+      await selectItem(selectedItem);
+    }
+
+    async function searchItemValues() {
+      if (!selectedItem) return setStatus('Selecione um item primeiro.', true);
+      setStatus('Buscando valores unitarios em fontes publicas...');
+      const data = await api(`/api/items/${selectedItem}/search`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          query: document.getElementById('searchQuery').value,
+          source_types: ['pncp', 'compras_gov'],
+          start_date: document.getElementById('searchStart').value,
+          end_date: document.getElementById('searchEnd').value,
+          page_size: Number(document.getElementById('searchSize').value || 20),
+          save_results: true
+        })
+      });
+      document.getElementById('searchOutput').textContent = JSON.stringify({
+        fontes_salvas: data.saved_sources.length,
+        candidatos_com_valor_unitario: data.candidates.length,
+        avisos: data.issues
+      }, null, 2);
+      await selectItem(selectedItem);
+      if (data.issues.length) {
+        setStatus(data.issues.map(issue => issue.message).join(' | '), true);
+      } else {
+        setStatus(`${data.saved_sources.length} fonte(s) com valor unitario salvas para o item.`);
+      }
+    }
+
+    function renderSources(sources) {
+      const tbody = document.getElementById('sourceTable');
+      tbody.innerHTML = '';
+      sources.forEach(source => {
+        const price = source.prices?.[0]?.unit_price || 0;
+        const validation = source.validations?.[0]?.message || '-';
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${source.origin}</td><td>${source.organization}</td><td>${source.supplier || '-'}</td><td>${price}</td><td>${validation}</td>`;
+        tbody.appendChild(row);
+      });
+      if (!sources.length) tbody.innerHTML = '<tr><td colspan="5">Nenhuma fonte para este item.</td></tr>';
+    }
+
+    async function compareText() {
+      if (!selectedItem) return setStatus('Selecione um item primeiro.', true);
+      const item = items.find(i => i.id === selectedItem);
+      const data = await api('/api/intelligence/compare', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({left: item.description, right: document.getElementById('sourceContext').value})
+      });
+      setStatus(`Compatibilidade: ${data.status} (${Math.round(data.score * 100)}%)`);
+    }
+
+    async function calculate() {
+      if (!selectedBasket) return setStatus('Selecione uma cesta primeiro.', true);
+      const data = await api(`/api/baskets/${selectedBasket}/calculate`, {method: 'POST'});
+      document.getElementById('memoryOutput').textContent = JSON.stringify(data.memory, null, 2);
+    }
+
+    function downloadReport() {
+      if (!selectedBasket) return setStatus('Selecione uma cesta primeiro.', true);
+      window.location.href = `/api/baskets/${selectedBasket}/report.md`;
+    }
+
+    loadBaskets().catch(err => setStatus(err.message, true));
+  </script>
+</body>
+</html>
